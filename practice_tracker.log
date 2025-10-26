@@ -1,0 +1,209 @@
+2025-10-26 07:30:04,287 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 07:30:04,288 - __main__ - INFO - Current user set to: test_user
+2025-10-26 07:30:04,289 - __main__ - INFO - Practice Tracker starting...
+2025-10-26 07:30:04,289 - midi_monitor - INFO - MIDI monitor started
+2025-10-26 07:30:04,290 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 07:30:04,318 - midi_monitor - INFO - Connected to MIDI device: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 07:30:04,329 - practice_detector - INFO - Practice session started at 07:30:04
+2025-10-26 07:30:04,329 - __main__ - INFO - Session started for user: test_user
+2025-10-26 07:31:07,296 - practice_detector - INFO - Practice session ended: 1.0 minutes, 116 notes
+2025-10-26 07:31:07,297 - __main__ - INFO - Session ended: 1.0 minutes, 116 notes
+2025-10-26 07:31:07,312 - database - INFO - Saved session 1: test_user, 62s, 116 notes
+2025-10-26 07:31:34,823 - __main__ - INFO - Received signal 15
+2025-10-26 07:31:34,823 - __main__ - INFO - Practice Tracker stopping...
+2025-10-26 07:31:34,823 - database - INFO - Database connection closed
+2025-10-26 07:31:35,105 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 07:31:35,106 - database - INFO - Database connection closed
+2025-10-26 07:36:37,670 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 07:36:37,671 - __main__ - INFO - Current user set to: parent
+2025-10-26 07:36:37,671 - __main__ - INFO - Practice Tracker starting...
+2025-10-26 07:36:37,672 - midi_monitor - INFO - MIDI monitor started
+2025-10-26 07:36:37,672 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 07:36:37,676 - midi_monitor - INFO - Connected to MIDI device: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 07:37:01,204 - practice_detector - INFO - Practice session started at 07:37:01
+2025-10-26 07:37:01,205 - __main__ - INFO - Session started for user: parent
+2025-10-26 07:37:19,029 - __main__ - INFO - Received signal 15
+2025-10-26 07:37:19,030 - __main__ - INFO - Practice Tracker stopping...
+2025-10-26 07:37:19,030 - practice_detector - INFO - Session too short (17.8s), not saving
+2025-10-26 07:37:19,031 - database - INFO - Database connection closed
+2025-10-26 10:43:23,897 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 10:43:23,898 - __main__ - INFO - Practice Tracker starting...
+2025-10-26 10:43:23,899 - midi_monitor - INFO - MIDI monitor started
+2025-10-26 10:43:23,899 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:43:23,928 - midi_monitor - WARNING - No MIDI device found
+2025-10-26 10:43:28,928 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:43:28,934 - midi_monitor - WARNING - No MIDI device found
+2025-10-26 10:43:33,935 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:43:33,937 - midi_monitor - WARNING - No MIDI device found
+2025-10-26 10:43:38,937 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:43:38,939 - midi_monitor - WARNING - No MIDI device found
+2025-10-26 10:43:43,940 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:43:43,945 - midi_monitor - WARNING - No MIDI device found
+2025-10-26 10:43:48,946 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:43:48,951 - midi_monitor - WARNING - No MIDI device found
+2025-10-26 10:43:53,952 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:43:53,959 - midi_monitor - WARNING - No MIDI device found
+2025-10-26 10:43:58,960 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:43:58,967 - midi_monitor - WARNING - No MIDI device found
+2025-10-26 10:44:03,967 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:44:03,973 - midi_monitor - WARNING - No MIDI device found
+2025-10-26 10:44:08,973 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:44:08,978 - midi_monitor - WARNING - No MIDI device found
+2025-10-26 10:44:13,979 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:44:13,984 - midi_monitor - WARNING - No MIDI device found
+2025-10-26 10:44:18,985 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:44:18,990 - midi_monitor - WARNING - No MIDI device found
+2025-10-26 10:44:23,661 - __main__ - INFO - Received signal 15
+2025-10-26 10:44:23,661 - __main__ - INFO - Practice Tracker stopping...
+2025-10-26 10:44:23,662 - database - INFO - Database connection closed
+2025-10-26 10:46:39,603 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 10:46:39,605 - __main__ - INFO - Practice Tracker starting...
+2025-10-26 10:46:39,605 - midi_monitor - INFO - MIDI monitor started
+2025-10-26 10:46:39,605 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:46:39,635 - midi_monitor - INFO - Connected to MIDI device: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 10:47:27,397 - practice_detector - INFO - Practice session started at 10:47:27
+2025-10-26 10:47:27,398 - __main__ - INFO - Session detected, prompting for user...
+2025-10-26 10:47:42,611 - practice_detector - INFO - Session too short (15.2s), not saving
+2025-10-26 10:49:03,580 - __main__ - INFO - Received signal 15
+2025-10-26 10:49:03,580 - __main__ - INFO - Practice Tracker stopping...
+2025-10-26 10:49:03,581 - database - INFO - Database connection closed
+2025-10-26 10:49:39,847 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 10:49:39,848 - __main__ - INFO - Practice Tracker starting...
+2025-10-26 10:49:39,848 - midi_monitor - INFO - MIDI monitor started
+2025-10-26 10:49:39,848 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:49:39,875 - midi_monitor - INFO - Connected to MIDI device: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 10:49:52,555 - __main__ - INFO - First activity detected, prompting for user...
+2025-10-26 10:49:54,260 - __main__ - INFO - User selected via piano: parent
+2025-10-26 10:50:31,860 - __main__ - INFO - Received signal 15
+2025-10-26 10:50:31,861 - __main__ - INFO - Practice Tracker stopping...
+2025-10-26 10:50:31,861 - database - INFO - Database connection closed
+2025-10-26 10:50:51,234 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 10:50:51,237 - __main__ - INFO - Practice Tracker starting...
+2025-10-26 10:50:51,237 - midi_monitor - INFO - MIDI monitor started
+2025-10-26 10:50:51,238 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 10:50:51,272 - midi_monitor - INFO - Connected to MIDI device: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 10:51:18,177 - __main__ - INFO - First activity detected, prompting for user...
+2025-10-26 10:51:19,569 - __main__ - INFO - User selected via piano: parent
+2025-10-26 10:51:27,351 - practice_detector - INFO - Practice session started at 10:51:27
+2025-10-26 10:51:27,351 - __main__ - INFO - Session started for user: parent
+2025-10-26 10:51:43,242 - practice_detector - INFO - Session too short (15.9s), not saving
+2025-10-26 11:12:00,511 - __main__ - INFO - Received signal 15
+2025-10-26 11:12:00,511 - __main__ - INFO - Practice Tracker stopping...
+2025-10-26 11:12:00,512 - database - INFO - Database connection closed
+2025-10-26 11:12:00,838 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 11:12:00,839 - __main__ - INFO - Practice Tracker starting...
+2025-10-26 11:12:00,840 - midi_monitor - INFO - MIDI monitor started
+2025-10-26 11:12:00,840 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 11:12:00,868 - midi_monitor - INFO - Connected to MIDI device: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:12:00,869 - __main__ - INFO - First activity detected, prompting for user...
+2025-10-26 11:12:03,480 - __main__ - INFO - User selected via piano: parent
+2025-10-26 11:12:23,921 - practice_detector - INFO - Practice session started at 11:12:23
+2025-10-26 11:12:23,921 - __main__ - INFO - Session started for user: parent
+2025-10-26 11:13:06,677 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 11:13:06,678 - database - INFO - Database connection closed
+2025-10-26 11:13:33,849 - practice_detector - INFO - Practice session ended: 1.2 minutes, 162 notes
+2025-10-26 11:13:33,850 - __main__ - INFO - Session ended: 1.2 minutes, 162 notes
+2025-10-26 11:13:33,867 - database - INFO - Saved session 2: parent, 69s, 162 notes
+2025-10-26 11:13:33,867 - __main__ - INFO - Session ended, ready for next user
+2025-10-26 11:14:46,354 - __main__ - INFO - First activity detected, prompting for user...
+2025-10-26 11:14:47,999 - __main__ - INFO - User selected via piano: daughter
+2025-10-26 11:15:30,171 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 11:15:30,172 - database - INFO - Database connection closed
+2025-10-26 11:16:48,118 - __main__ - INFO - Received signal 15
+2025-10-26 11:16:48,119 - __main__ - INFO - Practice Tracker stopping...
+2025-10-26 11:16:48,119 - database - INFO - Database connection closed
+2025-10-26 11:16:48,422 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 11:16:48,423 - __main__ - INFO - Practice Tracker starting...
+2025-10-26 11:16:48,424 - midi_monitor - INFO - MIDI monitor started
+2025-10-26 11:16:48,424 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 11:16:48,452 - midi_monitor - INFO - Connected to MIDI device: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:18:57,329 - __main__ - INFO - First activity detected, prompting for user...
+2025-10-26 11:18:57,330 - __main__ - INFO - Attempting to play prompt melody...
+2025-10-26 11:18:57,336 - __main__ - INFO - Opening MIDI output: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:18:58,094 - __main__ - INFO - Prompt melody played successfully
+2025-10-26 11:18:59,057 - __main__ - INFO - User selected via piano: parent
+2025-10-26 11:18:59,058 - __main__ - INFO - Attempting to play confirmation chord...
+2025-10-26 11:18:59,064 - __main__ - INFO - Opening MIDI output: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:18:59,471 - __main__ - INFO - Confirmation chord played successfully
+2025-10-26 11:20:07,998 - practice_detector - INFO - Practice session started at 11:20:07
+2025-10-26 11:20:07,998 - __main__ - INFO - Session started for user: parent
+2025-10-26 11:20:24,447 - practice_detector - INFO - Session too short (16.4s), not saving
+2025-10-26 11:22:06,806 - __main__ - INFO - Received signal 15
+2025-10-26 11:22:06,807 - __main__ - INFO - Practice Tracker stopping...
+2025-10-26 11:22:06,807 - database - INFO - Database connection closed
+2025-10-26 11:22:07,127 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 11:22:07,128 - __main__ - INFO - Practice Tracker starting...
+2025-10-26 11:22:07,129 - midi_monitor - INFO - MIDI monitor started
+2025-10-26 11:22:07,129 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 11:22:07,158 - midi_monitor - INFO - Connected to MIDI device: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:22:21,269 - __main__ - INFO - First activity detected, prompting for user...
+2025-10-26 11:22:21,270 - __main__ - INFO - Attempting to play prompt melody...
+2025-10-26 11:22:21,276 - __main__ - INFO - Opening MIDI output: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:22:22,035 - __main__ - INFO - Prompt melody played successfully
+2025-10-26 11:22:23,800 - __main__ - INFO - User selected via piano: parent
+2025-10-26 11:22:23,801 - __main__ - INFO - Attempting to play confirmation chord...
+2025-10-26 11:22:23,806 - __main__ - INFO - Opening MIDI output: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:22:24,213 - __main__ - INFO - Confirmation chord played successfully
+2025-10-26 11:24:39,261 - practice_detector - INFO - Practice session started at 11:24:39
+2025-10-26 11:24:39,262 - __main__ - INFO - Session started for user: parent
+2025-10-26 11:24:57,148 - practice_detector - INFO - Session too short (17.9s), not saving
+2025-10-26 11:24:57,149 - __main__ - INFO - Session reset, ready for next user
+2025-10-26 11:25:07,511 - __main__ - INFO - First activity detected, prompting for user...
+2025-10-26 11:25:07,511 - __main__ - INFO - Attempting to play prompt melody...
+2025-10-26 11:25:07,517 - __main__ - INFO - Opening MIDI output: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:25:08,274 - __main__ - INFO - Prompt melody played successfully
+2025-10-26 11:25:10,107 - __main__ - INFO - User selected via piano: parent
+2025-10-26 11:25:10,107 - __main__ - INFO - Attempting to play confirmation chord...
+2025-10-26 11:25:10,113 - __main__ - INFO - Opening MIDI output: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:25:10,520 - __main__ - INFO - Confirmation chord played successfully
+2025-10-26 11:27:40,274 - practice_detector - INFO - Practice session started at 11:27:40
+2025-10-26 11:27:40,274 - __main__ - INFO - Session started for user: parent
+2025-10-26 11:27:58,169 - practice_detector - INFO - Session too short (17.9s), not saving
+2025-10-26 11:27:58,170 - __main__ - INFO - Session reset, ready for next user
+2025-10-26 11:27:59,561 - __main__ - INFO - Received signal 15
+2025-10-26 11:27:59,561 - __main__ - INFO - Practice Tracker stopping...
+2025-10-26 11:27:59,562 - database - INFO - Database connection closed
+2025-10-26 11:27:59,860 - database - INFO - Database initialized at practice_sessions.db
+2025-10-26 11:27:59,862 - __main__ - INFO - Practice Tracker starting...
+2025-10-26 11:27:59,862 - midi_monitor - INFO - MIDI monitor started
+2025-10-26 11:27:59,863 - midi_monitor - INFO - Attempting to connect to MIDI device...
+2025-10-26 11:27:59,890 - midi_monitor - INFO - Connected to MIDI device: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:28:03,702 - __main__ - INFO - First activity detected, prompting for user...
+2025-10-26 11:28:03,702 - __main__ - INFO - Attempting to play prompt melody...
+2025-10-26 11:28:03,704 - __main__ - INFO - Opening MIDI output: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:28:04,457 - __main__ - INFO - Prompt melody played successfully
+2025-10-26 11:28:05,054 - __main__ - INFO - User selected via piano: parent
+2025-10-26 11:28:05,055 - __main__ - INFO - Attempting to play confirmation chord...
+2025-10-26 11:28:05,061 - __main__ - INFO - Opening MIDI output: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:28:05,467 - __main__ - INFO - Confirmation chord played successfully
+2025-10-26 11:28:08,455 - practice_detector - INFO - Practice session started at 11:28:08
+2025-10-26 11:28:08,456 - __main__ - INFO - Session started for user: parent
+2025-10-26 11:28:31,866 - practice_detector - INFO - Session too short (23.4s), not saving
+2025-10-26 11:28:31,866 - __main__ - INFO - Session reset, ready for next user
+2025-10-26 11:28:46,688 - __main__ - INFO - First activity detected, prompting for user...
+2025-10-26 11:28:46,689 - __main__ - INFO - Attempting to play prompt melody...
+2025-10-26 11:28:46,695 - __main__ - INFO - Opening MIDI output: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:28:47,453 - __main__ - INFO - Prompt melody played successfully
+2025-10-26 11:28:49,011 - __main__ - INFO - User selected via piano: daughter
+2025-10-26 11:28:49,012 - __main__ - INFO - Attempting to play confirmation chord...
+2025-10-26 11:28:49,018 - __main__ - INFO - Opening MIDI output: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:28:49,425 - __main__ - INFO - Confirmation chord played successfully
+2025-10-26 11:28:52,744 - practice_detector - INFO - Practice session started at 11:28:52
+2025-10-26 11:28:52,745 - __main__ - INFO - Session started for user: daughter
+2025-10-26 11:29:17,872 - practice_detector - INFO - Session too short (25.1s), not saving
+2025-10-26 11:29:17,873 - __main__ - INFO - Session reset, ready for next user
+2025-10-26 11:29:29,383 - __main__ - INFO - First activity detected, prompting for user...
+2025-10-26 11:29:29,384 - __main__ - INFO - Attempting to play prompt melody...
+2025-10-26 11:29:29,392 - __main__ - INFO - Opening MIDI output: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:29:30,149 - __main__ - INFO - Prompt melody played successfully
+2025-10-26 11:29:32,609 - __main__ - INFO - User selected via piano: parent
+2025-10-26 11:29:32,609 - __main__ - INFO - Attempting to play confirmation chord...
+2025-10-26 11:29:32,615 - __main__ - INFO - Opening MIDI output: USB func for MIDI:USB func for MIDI MIDI OUT 1 28:0
+2025-10-26 11:29:33,022 - __main__ - INFO - Confirmation chord played successfully
+2025-10-26 11:29:35,623 - practice_detector - INFO - Practice session started at 11:29:35
+2025-10-26 11:29:35,624 - __main__ - INFO - Session started for user: parent
+2025-10-26 11:31:37,891 - practice_detector - INFO - Practice session ended: 2.0 minutes, 149 notes
+2025-10-26 11:31:37,891 - __main__ - INFO - Session ended: 2.0 minutes, 149 notes
+2025-10-26 11:31:37,908 - database - INFO - Saved session 3: parent, 122s, 149 notes
+2025-10-26 11:31:37,909 - __main__ - INFO - Session ended, ready for next user
+2025-10-26 11:31:37,909 - __main__ - INFO - Session reset, ready for next user

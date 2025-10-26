@@ -1,0 +1,28 @@
+[Unit]
+Description=Piano Practice Tracker Service
+After=sound.target network.target
+Wants=sound.target
+
+[Service]
+Type=simple
+User=aduston
+WorkingDirectory=/home/aduston/practicetracker
+ExecStart=/home/aduston/practicetracker/venv/bin/python /home/aduston/practicetracker/main.py --prompt-each-session
+
+# Automatic restart configuration
+Restart=always
+RestartSec=10
+
+# Restart on any failure
+StartLimitInterval=0
+
+# Log output
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=piano-tracker
+
+# Environment
+Environment="PYTHONUNBUFFERED=1"
+
+[Install]
+WantedBy=multi-user.target

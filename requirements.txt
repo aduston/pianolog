@@ -1,0 +1,3 @@
+# MIDI handling
+mido>=1.3.0
+python-rtmidi>=1.5.0
