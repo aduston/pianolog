@@ -1,5 +1,17 @@
 """
 Practice session detection logic based on MIDI activity.
+
+IMPORTANT: This module handles TWO distinct concepts:
+
+1. SESSION: An active practice session that tracks a user's playing activity.
+   - Starts when a user identifies themselves (via force_start_session)
+   - Ends when they stop playing for session_timeout seconds or manually end it
+   - Shown as "active session" in the web interface
+
+2. RECORDED SESSION: A session that meets the minimum duration requirement.
+   - Only sessions >= min_practice_duration get saved to the database
+   - Shorter sessions are still valid sessions, just not recorded/saved
+   - Example: Playing for 10 seconds is a session, but not a recorded session
 """
 import time
 from collections import deque
@@ -13,8 +25,14 @@ class PracticeDetector:
     """
     Detects practice sessions based on MIDI note activity.
 
-    Uses timeout-based detection: a session starts when notes are played
-    and ends after a period of inactivity.
+    This class manages the lifecycle of practice sessions, distinguishing between:
+    - Active sessions: Started when user identified (via force_start_session)
+    - Recorded sessions: Active sessions that meet min_practice_duration to be saved
+
+    Callbacks:
+    - on_session_start: Called when ANY session starts (active session begins)
+    - on_session_end: Called ONLY for sessions >= min_practice_duration (recorded session)
+    - on_session_reset: Called when ANY session ends (whether recorded or not)
     """
 
     def __init__(self,
@@ -26,10 +44,12 @@ class PracticeDetector:
         Initialize practice detector.
 
         Args:
-            activity_threshold: Minimum notes within activity_window to start session
-            activity_window: Time window (seconds) to check for activity
-            min_practice_duration: Minimum duration (seconds) to count as practice
-            session_timeout: Seconds of inactivity before ending session
+            activity_threshold: Minimum notes within activity_window to auto-start session
+                              (typically not used; use force_start_session after user ID)
+            activity_window: Time window (seconds) to check for activity threshold
+            min_practice_duration: Minimum duration (seconds) for a RECORDED session.
+                                 Sessions shorter than this are valid but won't be saved.
+            session_timeout: Seconds of inactivity before ending any active session
         """
         self.activity_threshold = activity_threshold
         self.activity_window = activity_window
@@ -103,6 +123,11 @@ class PracticeDetector:
         """Force end the current session (e.g., when shutting down)."""
         if self.practice_session_active:
             self._end_session()
+
+    def force_start_session(self):
+        """Force start a session (e.g., after user selection in prompt mode)."""
+        if not self.practice_session_active:
+            self._start_session()
 
     def _start_session(self):
         """Start a new practice session."""

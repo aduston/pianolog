@@ -9,8 +9,8 @@ The Piano Practice Tracker is now installed and running as a service! It will au
 1. **Turn on your piano** - The tracker will detect it automatically
 2. **Start playing** - On the first note, you'll hear a prompt melody (C-E-G)
 3. **Identify yourself**:
-   - Press **C** (middle C) for parent
-   - Press **D** for daughter
+   - Press **C** (middle C) for Dad
+   - Press **D** for Alex
 4. **Hear confirmation** - The piano plays a chord to confirm
 5. **Practice!** - Your session is now being tracked
 6. **When done** - Stop playing for 15 seconds and the session auto-saves

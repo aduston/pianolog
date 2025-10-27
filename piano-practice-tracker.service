@@ -6,8 +6,8 @@ Wants=sound.target
 [Service]
 Type=simple
 User=aduston
-WorkingDirectory=/home/aduston/practicetracker
-ExecStart=/home/aduston/practicetracker/venv/bin/python /home/aduston/practicetracker/main.py --prompt-each-session
+WorkingDirectory=/home/aduston/pianolog
+ExecStart=/home/aduston/pianolog/venv/bin/python /home/aduston/pianolog/main.py --prompt-each-session
 
 # Automatic restart configuration
 Restart=always

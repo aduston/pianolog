@@ -13,6 +13,8 @@ from database import PracticeDatabase
 from practice_detector import PracticeDetector
 from midi_monitor import MidiMonitor
 from user_selector import PianoUserSelector
+from web_server import PianologWebServer
+import config
 
 # Configure logging
 logging.basicConfig(
@@ -30,37 +32,44 @@ logger = logging.getLogger(__name__)
 class PracticeTracker:
     """Main practice tracking application."""
 
-    def __init__(self, prompt_on_session_start=False):
+    def __init__(self, prompt_on_session_start=False, enable_web_server=True, web_port=None):
         """Initialize practice tracker components.
 
         Args:
             prompt_on_session_start: If True, prompt for user at each session start
+            enable_web_server: If True, start the web server
+            web_port: Port for the web server (defaults to config.WEB_PORT)
         """
         self.db = PracticeDatabase()
         self.detector = PracticeDetector(
-            activity_threshold=3,
-            activity_window=10.0,
-            min_practice_duration=30.0,
-            session_timeout=15.0
+            activity_threshold=config.ACTIVITY_THRESHOLD,
+            activity_window=config.ACTIVITY_WINDOW,
+            min_practice_duration=config.MIN_PRACTICE_DURATION,
+            session_timeout=config.SESSION_TIMEOUT
         )
-        self.midi_monitor = MidiMonitor(device_keyword='USB func for MIDI')
+        self.midi_monitor = MidiMonitor(device_keyword=config.MIDI_DEVICE_KEYWORD)
 
         # Current user
         self.current_user = "unknown"
         self.prompt_on_session_start = prompt_on_session_start
         self.waiting_for_user = False
 
-        # User selection mapping
-        self.user_notes = {
-            60: "parent",    # Middle C
-            62: "daughter"   # D
-        }
+        # User selection mapping from config
+        self.user_notes = config.USERS
+
+        # Web server
+        self.web_server = None
+        if enable_web_server:
+            port = web_port if web_port is not None else config.WEB_PORT
+            self.web_server = PianologWebServer(self, port=port)
 
         # Setup callbacks
         self.detector.on_session_start = self._on_session_start
         self.detector.on_session_end = self._on_session_end
         self.detector.on_session_reset = self._on_session_reset
         self.midi_monitor.on_note_on = self._on_note_on
+        self.midi_monitor.on_midi_connected = self._on_midi_connected
+        self.midi_monitor.on_midi_disconnected = self._on_midi_disconnected
 
         # Timeout checker thread
         self.timeout_thread = None
@@ -75,6 +84,13 @@ class PracticeTracker:
         """
         self.current_user = user_id
         logger.info(f"Current user set to: {user_id}")
+
+        # Notify web server of user change
+        if self.web_server:
+            self.web_server.socketio.emit('user_changed', {
+                'user': user_id,
+                'timestamp': time.time()
+            })
 
     def _play_prompt(self):
         """Play prompt melody to ask for user selection."""
@@ -138,16 +154,22 @@ class PracticeTracker:
         # If waiting for user selection, check if this is a selection key
         if self.waiting_for_user:
             if note in self.user_notes:
-                self.current_user = self.user_notes[note]
-                logger.info(f"User selected via piano: {self.current_user}")
-                print(f"\n*** {self.current_user.upper()} selected! ***\n")
+                selected_user = self.user_notes[note]
+                logger.info(f"User selected via piano: {selected_user}")
+                print(f"\n*** {selected_user.upper()} selected! ***\n")
 
                 # Play confirmation chord
                 self._play_confirmation()
 
                 self.waiting_for_user = False
 
-                # Now start detecting this session
+                # Set the user (this will notify web server)
+                self.set_user(selected_user)
+
+                # Force start the session immediately
+                self.detector.force_start_session()
+
+                # Process this note as part of the session
                 self.detector.process_note_on(note, velocity)
             # Ignore other notes while waiting for selection
             return
@@ -173,12 +195,20 @@ class PracticeTracker:
         # Normal session detection
         self.detector.process_note_on(note, velocity)
 
+        # Notify web server of activity
+        if self.web_server and self.detector.practice_session_active:
+            self.web_server.notify_session_activity()
+
     def _on_session_start(self):
         """Handle practice session start."""
         # Only announce if we already have a user
         if not self.waiting_for_user and self.current_user != "unknown":
             logger.info(f"Session started for user: {self.current_user}")
             print(f"\n*** Practice session started for {self.current_user} ***\n")
+
+            # Notify web server
+            if self.web_server:
+                self.web_server.notify_session_start()
 
     def _on_session_end(self, start_time: float, end_time: float, note_count: int):
         """Handle practice session end."""
@@ -191,6 +221,10 @@ class PracticeTracker:
         # Save to database
         self.db.save_session(self.current_user, start_time, end_time, note_count)
 
+        # Notify web server
+        if self.web_server:
+            self.web_server.notify_session_end(start_time, end_time, note_count)
+
         # Reset user for next session in always-on mode
         if self.prompt_on_session_start:
             self.current_user = "unknown"
@@ -198,9 +232,35 @@ class PracticeTracker:
 
     def _on_session_reset(self):
         """Handle session reset (called for ALL session ends, even short ones)."""
+        # Notify web server that session ended (even if it was too short to save)
+        if self.web_server:
+            # For short sessions, use zeros for start/end/count since they won't be saved
+            self.web_server.socketio.emit('session_ended', {
+                'user': self.current_user,
+                'timestamp': time.time()
+            })
+
         if self.prompt_on_session_start:
             self.current_user = "unknown"
             logger.info("Session reset, ready for next user")
+
+    def _on_midi_connected(self, device_name: str):
+        """Handle MIDI device connection."""
+        logger.info(f"MIDI device connected: {device_name}")
+        print(f"\n*** MIDI device connected: {device_name} ***\n")
+
+        # Notify web server
+        if self.web_server:
+            self.web_server.notify_midi_connected(device_name)
+
+    def _on_midi_disconnected(self):
+        """Handle MIDI device disconnection."""
+        logger.warning("MIDI device disconnected")
+        print(f"\n*** MIDI device disconnected - attempting to reconnect... ***\n")
+
+        # Notify web server
+        if self.web_server:
+            self.web_server.notify_midi_disconnected()
 
     def _timeout_checker(self):
         """Background thread to check for session timeouts."""
@@ -212,6 +272,11 @@ class PracticeTracker:
         """Start the practice tracker."""
         self.running = True
 
+        # Start web server if enabled
+        if self.web_server:
+            self.web_server.start()
+            logger.info(f"Web interface available at http://localhost:{self.web_server.port}")
+
         # Start timeout checker thread
         self.timeout_thread = threading.Thread(target=self._timeout_checker, daemon=True)
         self.timeout_thread.start()
@@ -221,6 +286,8 @@ class PracticeTracker:
         print("Piano Practice Tracker")
         print("=" * 60)
         print(f"Current user: {self.current_user}")
+        if self.web_server:
+            print(f"Web interface: http://localhost:{self.web_server.port}")
         print("\nTo change user, press Ctrl+C and restart with --user flag")
         print("Monitoring piano activity...\n")
 
@@ -242,6 +309,10 @@ class PracticeTracker:
         # Stop MIDI monitoring
         self.midi_monitor.stop()
 
+        # Stop web server
+        if self.web_server:
+            self.web_server.stop()
+
         # Close database
         self.db.close()
 
@@ -261,8 +332,38 @@ def main():
                        help='Show recent sessions and exit')
     parser.add_argument('--show-summary', action='store_true',
                        help='Show daily summary and exit')
+    parser.add_argument('--clear-database', action='store_true',
+                       help='Clear all practice sessions from database')
 
     args = parser.parse_args()
+
+    # Handle database clearing
+    if args.clear_database:
+        db = PracticeDatabase()
+
+        # Get count of sessions for confirmation
+        sessions = db.get_recent_sessions(limit=999999)
+        count = len(sessions)
+
+        if count == 0:
+            print("\nDatabase is already empty.")
+            db.close()
+            return
+
+        print(f"\n⚠️  WARNING: This will delete all {count} practice session(s) from the database!")
+        print("This action cannot be undone.\n")
+        response = input("Type 'yes' to confirm: ")
+
+        if response.lower() == 'yes':
+            cursor = db.conn.cursor()
+            cursor.execute('DELETE FROM practice_sessions')
+            db.conn.commit()
+            print(f"\n✓ Successfully deleted {count} session(s) from database.\n")
+        else:
+            print("\nCancelled. No data was deleted.\n")
+
+        db.close()
+        return
 
     # Handle report commands
     if args.show_sessions:
@@ -313,12 +414,7 @@ def main():
             print("The piano will play a prompt melody...")
             print()
 
-            users = {
-                60: "parent",    # Middle C
-                62: "daughter"   # D
-            }
-
-            selector = PianoUserSelector(users)
+            selector = PianoUserSelector(config.USERS)
             selected_user = selector.select_user(timeout=30.0)
 
             if selected_user == "unknown":
