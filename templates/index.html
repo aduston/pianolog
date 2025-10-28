@@ -561,6 +561,7 @@
 
                 // Show end session button and change user selector context
                 sessionControls.className = 'session-controls active';
+                userSelector.style.display = 'block';
                 userSelector.className = 'user-selector during-session';
                 userSelectorTitle.textContent = 'Switch to:';
 
@@ -574,14 +575,25 @@
             } else {
                 statusIndicator.className = 'status-indicator inactive';
                 const user = currentSession ? currentSession.user : 'unknown';
-                statusText.textContent = `No active session (${user})`;
+
+                // Display status based on whether we have a known user or not
+                if (user === 'unknown') {
+                    statusText.textContent = 'No active session';
+                    // Hide user selector when nobody is identified
+                    userSelector.style.display = 'none';
+                } else {
+                    statusText.textContent = `No active session (${user})`;
+                    // Show user selector when someone is identified but not playing
+                    userSelector.style.display = 'block';
+                    userSelectorTitle.textContent = "Who's practicing?";
+                }
+
                 sessionInfo.style.display = 'none';
                 stopDurationTimer();
 
-                // Hide end session button and restore user selector context
+                // Hide end session button
                 sessionControls.className = 'session-controls';
                 userSelector.className = 'user-selector';
-                userSelectorTitle.textContent = "Who's practicing?";
             }
         }
 
