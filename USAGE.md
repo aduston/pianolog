@@ -56,34 +56,31 @@ sudo systemctl start piano-practice-tracker
 - Restart the service: `sudo systemctl restart piano-practice-tracker`
 
 ### Piano power-cycled (turned off then on)
-**IMPORTANT:** If you turn the piano off and back on, the USB connection will NOT re-establish automatically.
+**FULLY AUTOMATIC RECONNECTION!** The tracker now handles piano power-cycling completely automatically.
 
-**Root Cause:** The Kawai CA49's USB firmware does not properly re-initialize when the piano is power-cycled. This is a limitation of the piano itself, not the Raspberry Pi.
+**How it works:**
+1. **USB event monitoring** - Detects when the piano is turned off (USB disconnect)
+2. **Automatic power cycling** - After 3 failed reconnection attempts (~15 seconds), the system automatically power-cycles the USB port using `uhubctl`
+3. **Device re-enumeration** - Forces the piano's USB controller to properly re-initialize
+4. **Auto-reconnect** - Connection is re-established automatically within ~20 seconds total
 
-**Solutions (choose one):**
+**What this means for you:**
+- **Turn the piano off and on anytime** - no manual intervention needed!
+- The system will automatically detect the disconnection and reconnect
+- Total recovery time: ~15-20 seconds after turning the piano back on
+- No unplugging/replugging cables required
 
-1. **Recommended: Leave piano on 24/7**
-   - Disable Auto Power Off in piano settings (Settings → Auto Power Off → Off)
-   - The tracker is designed for always-on operation
-   - Minimal power consumption when idle
+**Technical details:**
+- Uses Raspberry Pi 4's built-in USB hub power control via `uhubctl`
+- Monitors USB device events in real-time using `pyudev`
+- Automatically power-cycles USB port when reconnection fails
+- Works around the Kawai CA49's USB firmware initialization bug
 
-2. **Manual USB unplug/replug**
-   - Unplug USB cable from Raspberry Pi
-   - Wait 2 seconds
-   - Plug it back in
-   - Device reconnects immediately
-
-3. **Optional: USB power switch** (~$15-20)
-   - Install a physical USB switch between piano and Pi
-   - Press switch to power-cycle USB without unplugging
-   - Search for "USB power switch" online
-
-4. **Optional: Smart USB hub** (~$30-40)
-   - USB hub with software-controlled power (uhubctl compatible)
-   - Allows programmatic port power cycling
-   - More complex setup
-
-**Note:** We attempted automatic USB reset via udev rules, but the piano's USB controller fails to enumerate properly after power-cycling, making software-only solutions ineffective.
+**If you still want to leave it on 24/7:**
+- Disable Auto Power Off in piano settings (Settings → Auto Power Off → Off)
+- This avoids the ~15-20 second reconnection delay
+- Minimal power consumption when idle
+- Recommended if you practice multiple times per day
 
 ### No prompt melody
 - Check piano volume

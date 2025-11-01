@@ -2,6 +2,8 @@
 MIDI monitoring with automatic reconnection support.
 """
 import mido
+import pyudev
+import subprocess
 import time
 import logging
 from typing import Optional, Callable
@@ -14,7 +16,7 @@ class MidiMonitor:
     Monitors MIDI input with automatic device detection and reconnection.
     """
 
-    def __init__(self, device_keyword: str = 'USB func for MIDI', reconnect_interval: float = 5.0, health_check_interval: float = 2.0):
+    def __init__(self, device_keyword: str = 'USB func for MIDI', reconnect_interval: float = 5.0, health_check_interval: float = 2.0, enable_usb_reset: bool = True):
         """
         Initialize MIDI monitor.
 
@@ -22,15 +24,26 @@ class MidiMonitor:
             device_keyword: Keyword to match in device name (empty for first device)
             reconnect_interval: Seconds to wait between reconnection attempts
             health_check_interval: Seconds between health checks of connection
+            enable_usb_reset: If True, automatically power-cycle USB port on reconnection failure
         """
         self.device_keyword = device_keyword
         self.reconnect_interval = reconnect_interval
         self.health_check_interval = health_check_interval
+        self.enable_usb_reset = enable_usb_reset
         self.inport: Optional[mido.ports.BaseInput] = None
         self.running = False
         self.is_connected = False
         self.last_connected_device: Optional[str] = None
         self.last_health_check = 0
+        self.reconnect_attempts = 0
+        self.max_reconnect_attempts_before_reset = 3  # Try 3 times before USB reset
+        self.usb_reset_performed = False  # Track if we've already done a USB reset
+        self.last_usb_reset_time = 0  # Track when last USB reset was done
+
+        # USB device monitoring for instant reconnection
+        self.context = pyudev.Context()
+        self.monitor = pyudev.Monitor.from_netlink(self.context)
+        self.monitor.filter_by(subsystem='usb')
 
         # Callbacks
         self.on_note_on: Optional[Callable[[int, int, int], None]] = None
@@ -151,6 +164,87 @@ class MidiMonitor:
             logger.error(f"Error checking device health: {e}")
             return False
 
+    def reset_usb_port(self, port: int = 1) -> bool:
+        """
+        Power-cycle the USB port to force device re-enumeration.
+        This works around piano firmware issues that prevent proper USB re-initialization.
+
+        Args:
+            port: USB port number (1-4 on Raspberry Pi 4)
+
+        Returns:
+            True if reset was successful, False otherwise
+        """
+        try:
+            logger.info(f"Attempting USB port {port} power cycle...")
+
+            # Turn off both USB 2.0 (hub 1-1) and USB 3.0 (hub 2) virtual hubs
+            # This is necessary for proper power cycling on Raspberry Pi
+            subprocess.run(['sudo', 'uhubctl', '-l', '1-1', '-p', str(port), '-a', 'off'],
+                         check=True, capture_output=True, timeout=10)
+            subprocess.run(['sudo', 'uhubctl', '-l', '2', '-p', str(port), '-a', 'off'],
+                         check=True, capture_output=True, timeout=10)
+
+            # Wait for power to stabilize
+            time.sleep(2)
+
+            # Turn back on
+            subprocess.run(['sudo', 'uhubctl', '-l', '1-1', '-p', str(port), '-a', 'on'],
+                         check=True, capture_output=True, timeout=10)
+            subprocess.run(['sudo', 'uhubctl', '-l', '2', '-p', str(port), '-a', 'on'],
+                         check=True, capture_output=True, timeout=10)
+
+            # Wait for device enumeration
+            logger.info("USB port reset complete, waiting for device enumeration...")
+            time.sleep(3)
+
+            logger.info("USB port power cycle successful")
+            return True
+
+        except subprocess.TimeoutExpired:
+            logger.error("USB reset timeout")
+            return False
+        except subprocess.CalledProcessError as e:
+            logger.error(f"USB reset failed: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"USB reset error: {e}")
+            return False
+
+    def check_usb_events(self):
+        """
+        Check for USB device add/remove events (non-blocking).
+        This provides instant reconnection when the piano is power-cycled.
+        """
+        device = self.monitor.poll(timeout=0)
+        if device and device.action in ['add', 'remove']:
+            logger.info(f"USB device {device.action} event detected")
+
+            # Wait briefly for device enumeration after add
+            if device.action == 'add':
+                time.sleep(1.0)
+
+            # For both add and remove, trigger a reconnection attempt
+            # This will handle both new connections and re-establishing after removal
+            if device.action == 'add' and not self.inport:
+                logger.info("USB device added - attempting connection")
+                # Reset reconnect counter and USB reset flag on new USB device
+                self.reconnect_attempts = 0
+                self.usb_reset_performed = False
+                self.connect()
+            elif device.action == 'remove':
+                logger.info("USB device removed - disconnecting")
+                # Reset reconnect counter on device removal, but NOT usb_reset_performed
+                # This prevents multiple resets if piano stays off
+                self.reconnect_attempts = 0
+                # The device might be ours, so disconnect and let the main loop reconnect
+                if self.inport:
+                    self.inport = None
+                    if self.is_connected:
+                        self.is_connected = False
+                        if self.on_midi_disconnected:
+                            self.on_midi_disconnected()
+
     def start(self):
         """
         Start monitoring MIDI input.
@@ -162,12 +256,44 @@ class MidiMonitor:
         logger.info("MIDI monitor started")
 
         while self.running:
+            # Check for USB device add/remove events (instant reconnection)
+            self.check_usb_events()
+
             # Ensure connected
             if not self.inport:
                 logger.info("Attempting to connect to MIDI device...")
                 if not self.connect():
+                    self.reconnect_attempts += 1
+
+                    # After multiple failed attempts, try USB power cycle (but only once)
+                    if (self.enable_usb_reset and
+                        self.reconnect_attempts >= self.max_reconnect_attempts_before_reset and
+                        not self.usb_reset_performed):
+
+                        # Check if we've done a USB reset recently (within 5 minutes)
+                        time_since_last_reset = time.time() - self.last_usb_reset_time
+                        if time_since_last_reset < 300:  # 5 minutes
+                            logger.info(f"USB reset performed {time_since_last_reset:.0f}s ago, skipping")
+                        else:
+                            logger.warning(f"Failed {self.reconnect_attempts} reconnection attempts, "
+                                         "attempting USB port power cycle...")
+                            if self.reset_usb_port():
+                                # Mark that we've done a USB reset and when
+                                self.usb_reset_performed = True
+                                self.last_usb_reset_time = time.time()
+                                self.reconnect_attempts = 0
+                            else:
+                                # If USB reset failed, wait longer before next attempt
+                                logger.error("USB port power cycle failed")
+                                time.sleep(self.reconnect_interval * 2)
+                                continue
+
                     time.sleep(self.reconnect_interval)
                     continue
+                else:
+                    # Successfully connected, reset counter and USB reset flag
+                    self.reconnect_attempts = 0
+                    self.usb_reset_performed = False
 
             # Periodic health check to detect device removal
             current_time = time.time()
