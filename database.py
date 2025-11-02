@@ -45,6 +45,15 @@ class PracticeDatabase:
             )
         ''')
 
+        # Create user targets table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_targets (
+                user_id TEXT PRIMARY KEY,
+                daily_target_minutes INTEGER NOT NULL DEFAULT 15,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
         # Create indexes for common queries
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_user_date
@@ -157,6 +166,97 @@ class PracticeDatabase:
             cursor.execute(query, (days,))
 
         return [dict(row) for row in cursor.fetchall()]
+
+    def get_user_target(self, user_id: str) -> int:
+        """
+        Get daily practice target for a user in minutes.
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            Target in minutes (defaults to 15 if not set)
+        """
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT daily_target_minutes FROM user_targets
+            WHERE user_id = ?
+        ''', (user_id,))
+
+        result = cursor.fetchone()
+        return result['daily_target_minutes'] if result else 15
+
+    def set_user_target(self, user_id: str, target_minutes: int):
+        """
+        Set daily practice target for a user.
+
+        Args:
+            user_id: User identifier
+            target_minutes: Target in minutes
+        """
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            INSERT INTO user_targets (user_id, daily_target_minutes)
+            VALUES (?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET
+                daily_target_minutes = ?,
+                updated_at = CURRENT_TIMESTAMP
+        ''', (user_id, target_minutes, target_minutes))
+
+        self.conn.commit()
+        logger.info(f"Set target for {user_id}: {target_minutes} minutes")
+
+    def get_weekly_stats(self, user_id: str) -> List[Dict]:
+        """
+        Get weekly practice stats for a user with target information.
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            List of daily stats for the last 7 days including target
+        """
+        from datetime import datetime, timedelta
+
+        # Get the target for this user
+        target_minutes = self.get_user_target(user_id)
+
+        # Get actual practice data for last 7 days
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT
+                session_date,
+                SUM(duration_seconds) as total_seconds
+            FROM practice_sessions
+            WHERE user_id = ?
+              AND session_date >= date('now', '-6 days')
+            GROUP BY session_date
+            ORDER BY session_date ASC
+        ''', (user_id,))
+
+        practice_by_date = {row['session_date']: row['total_seconds'] for row in cursor.fetchall()}
+
+        # Build complete 7-day array (including days with no practice)
+        stats = []
+        today = datetime.now().date()
+
+        for i in range(6, -1, -1):  # 6 days ago to today
+            date = today - timedelta(days=i)
+            date_str = date.isoformat()
+
+            total_seconds = practice_by_date.get(date_str, 0)
+            total_minutes = total_seconds / 60.0
+
+            stats.append({
+                'date': date_str,
+                'day_name': date.strftime('%a'),  # Mon, Tue, etc.
+                'minutes': round(total_minutes, 1),
+                'target_minutes': target_minutes,
+                'percentage': min(100, round(100 * total_minutes / target_minutes)) if target_minutes > 0 else 0,
+                'met_target': total_minutes >= target_minutes
+            })
+
+        return stats
 
     def close(self):
         """Close database connection."""

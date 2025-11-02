@@ -146,6 +146,35 @@ class PianologWebServer:
             else:
                 return jsonify({'success': False, 'message': 'No active session'}), 400
 
+        @self.app.route('/api/stats/weekly')
+        def get_weekly_stats():
+            """Get weekly practice stats for all users."""
+            # Get all users from config
+            all_stats = {}
+            for note, user_id in config.USERS.items():
+                stats = self.practice_tracker.db.get_weekly_stats(user_id)
+                all_stats[user_id] = stats
+
+            return jsonify(all_stats)
+
+        @self.app.route('/api/target/<user_id>', methods=['GET'])
+        def get_user_target(user_id):
+            """Get practice target for a specific user."""
+            target = self.practice_tracker.db.get_user_target(user_id)
+            return jsonify({'user_id': user_id, 'target_minutes': target})
+
+        @self.app.route('/api/target/<user_id>', methods=['POST'])
+        def set_user_target(user_id):
+            """Set practice target for a specific user."""
+            data = request.get_json()
+            target_minutes = data.get('target_minutes')
+
+            if target_minutes is None or target_minutes < 0:
+                return jsonify({'error': 'target_minutes must be >= 0'}), 400
+
+            self.practice_tracker.db.set_user_target(user_id, target_minutes)
+            return jsonify({'success': True, 'user_id': user_id, 'target_minutes': target_minutes})
+
     def notify_session_start(self):
         """Notify clients that a session has started."""
         session_info = self.practice_tracker.detector.get_session_info()

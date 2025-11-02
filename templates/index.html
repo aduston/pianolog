@@ -312,6 +312,171 @@
             font-size: 0.9em;
             color: #666;
         }
+
+        /* Stats screen styles */
+        .stats-screen {
+            display: none;
+        }
+
+        .stats-screen.active {
+            display: block;
+        }
+
+        .practice-screen {
+            display: none;
+        }
+
+        .practice-screen.active {
+            display: block;
+        }
+
+        .user-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 768px) and (orientation: landscape) {
+            .user-stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .user-stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .user-stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .user-stats-name {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .user-stats-target {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .weekly-chart {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 150px;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .day-bar-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .day-bar {
+            width: 100%;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 4px;
+        }
+
+        .day-bar.met-target {
+            background: linear-gradient(180deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .day-bar.partial {
+            background: linear-gradient(180deg, #FFA726 0%, #FB8C00 100%);
+        }
+
+        .day-bar.empty {
+            background: #e0e0e0;
+        }
+
+        .day-label {
+            font-size: 0.75em;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .day-value {
+            font-size: 0.7em;
+            color: #999;
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .day-bar-container:hover .day-value {
+            opacity: 1;
+        }
+
+        .stats-summary {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .stats-summary-item {
+            text-align: center;
+        }
+
+        .stats-summary-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stats-summary-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 767px) {
+            header h1 {
+                font-size: 2em;
+            }
+
+            .weekly-chart {
+                height: 120px;
+            }
+
+            .user-stats-name {
+                font-size: 1.2em;
+            }
+        }
+
+        @media (orientation: portrait) {
+            .user-stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Keep MIDI status visible on both screens */
+        .midi-status-container {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -323,16 +488,27 @@
             <p>Piano Practice Tracker</p>
         </header>
 
-        <!-- MIDI Status -->
-        <div class="midi-status" id="midiStatus">
-            <div>
-                <div class="midi-status-text" id="midiStatusText">Checking MIDI...</div>
-                <div class="midi-device-name" id="midiDeviceName"></div>
+        <!-- MIDI Status (shown on both screens) -->
+        <div class="midi-status-container">
+            <div class="midi-status" id="midiStatus">
+                <div>
+                    <div class="midi-status-text" id="midiStatusText">Checking MIDI...</div>
+                    <div class="midi-device-name" id="midiDeviceName"></div>
+                </div>
+                <button class="retry-button" id="retryButton" onclick="retryMidiConnection()" style="display: none;">Retry Connection</button>
             </div>
-            <button class="retry-button" id="retryButton" onclick="retryMidiConnection()" style="display: none;">Retry Connection</button>
         </div>
 
-        <div class="card status-card">
+        <!-- Stats Screen (shown when idle) -->
+        <div class="stats-screen" id="statsScreen">
+            <div class="user-stats-grid" id="userStatsGrid">
+                <!-- User stats cards will be dynamically generated -->
+            </div>
+        </div>
+
+        <!-- Practice Screen (shown when practicing) -->
+        <div class="practice-screen" id="practiceScreen">
+            <div class="card status-card">
             <div class="status-text">
                 <span class="status-indicator" id="statusIndicator"></span>
                 <span id="statusText">Loading...</span>
@@ -361,11 +537,12 @@
             </div>
         </div>
 
-        <div class="card recent-sessions">
-            <h3>Recent Sessions</h3>
-            <ul class="session-list" id="recentSessions">
-                <li class="session-item">Loading...</li>
-            </ul>
+            <div class="card recent-sessions">
+                <h3>Recent Sessions</h3>
+                <ul class="session-list" id="recentSessions">
+                    <li class="session-item">Loading...</li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -381,6 +558,8 @@
         let durationTimer = null;
         let configuredUsers = [];
         let midiConnected = false;
+        let weeklyStats = {};
+        let statsRefreshInterval = null;
 
         // Connection status
         socket.on('connect', () => {
@@ -391,6 +570,8 @@
             loadMidiStatus();
             loadStatus();
             loadRecentSessions();
+            loadWeeklyStats();
+            startStatsRefresh();
         });
 
         socket.on('disconnect', () => {
@@ -404,6 +585,7 @@
             console.log('Session started:', data);
             currentSession = data;
             updateStatus();
+            switchToScreen('practice');
             loadRecentSessions();
         });
 
@@ -411,7 +593,9 @@
             console.log('Session ended:', data);
             currentSession = null;
             updateStatus();
+            switchToScreen('stats');
             loadRecentSessions();
+            loadWeeklyStats();  // Refresh stats after session ends
         });
 
         socket.on('session_activity', (data) => {
@@ -528,9 +712,11 @@
                 if (data.active) {
                     currentSession = data;
                     startDurationTimer();
+                    switchToScreen('practice');
                 } else {
                     currentSession = null;
                     stopDurationTimer();
+                    switchToScreen('stats');
                 }
 
                 updateStatus();
@@ -715,11 +901,129 @@
             }
         }
 
+        // Load weekly stats for all users
+        async function loadWeeklyStats() {
+            try {
+                const response = await fetch(basePath + '/api/stats/weekly');
+                weeklyStats = await response.json();
+                renderStatsScreen();
+            } catch (error) {
+                console.error('Error loading weekly stats:', error);
+            }
+        }
+
+        // Render the stats screen with weekly bar graphs
+        function renderStatsScreen() {
+            const userStatsGrid = document.getElementById('userStatsGrid');
+
+            if (Object.keys(weeklyStats).length === 0) {
+                userStatsGrid.innerHTML = '<p style="color: white; text-align: center;">Loading stats...</p>';
+                return;
+            }
+
+            userStatsGrid.innerHTML = Object.entries(weeklyStats).map(([userId, stats]) => {
+                // Calculate summary stats
+                const totalMinutes = stats.reduce((sum, day) => sum + day.minutes, 0);
+                const daysMetTarget = stats.filter(day => day.met_target).length;
+                const avgMinutes = (totalMinutes / stats.length).toFixed(1);
+                const targetMinutes = stats[0]?.target_minutes || 15;
+
+                // Generate bar chart
+                const maxHeight = 150;
+                const bars = stats.map(day => {
+                    const heightPercentage = Math.min(100, day.percentage);
+                    const height = Math.max(4, (heightPercentage / 100) * maxHeight);
+
+                    let barClass = 'day-bar';
+                    if (day.minutes === 0) {
+                        barClass += ' empty';
+                    } else if (day.met_target) {
+                        barClass += ' met-target';
+                    } else {
+                        barClass += ' partial';
+                    }
+
+                    return `
+                        <div class="day-bar-container">
+                            <div class="${barClass}" style="height: ${height}px;">
+                                <div class="day-value">${day.minutes}m</div>
+                            </div>
+                            <div class="day-label">${day.day_name}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="user-stats-card">
+                        <div class="user-stats-header">
+                            <div class="user-stats-name">${userId}</div>
+                            <div class="user-stats-target">Goal: ${targetMinutes} min/day</div>
+                        </div>
+                        <div class="weekly-chart">
+                            ${bars}
+                        </div>
+                        <div class="stats-summary">
+                            <div class="stats-summary-item">
+                                <div class="stats-summary-value">${daysMetTarget}/7</div>
+                                <div class="stats-summary-label">Days on track</div>
+                            </div>
+                            <div class="stats-summary-item">
+                                <div class="stats-summary-value">${totalMinutes.toFixed(0)}m</div>
+                                <div class="stats-summary-label">This week</div>
+                            </div>
+                            <div class="stats-summary-item">
+                                <div class="stats-summary-value">${avgMinutes}m</div>
+                                <div class="stats-summary-label">Daily avg</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Switch between stats and practice screens
+        function switchToScreen(screenName) {
+            const statsScreen = document.getElementById('statsScreen');
+            const practiceScreen = document.getElementById('practiceScreen');
+
+            if (screenName === 'stats') {
+                statsScreen.classList.add('active');
+                practiceScreen.classList.remove('active');
+            } else if (screenName === 'practice') {
+                statsScreen.classList.remove('active');
+                practiceScreen.classList.add('active');
+            }
+        }
+
+        // Start periodic stats refresh (every 5 minutes)
+        function startStatsRefresh() {
+            if (statsRefreshInterval) {
+                clearInterval(statsRefreshInterval);
+            }
+            statsRefreshInterval = setInterval(() => {
+                loadWeeklyStats();
+            }, 5 * 60 * 1000);
+        }
+
+        // Update status display (modified to handle screen switching)
+        function updateStatusAndScreen() {
+            updateStatus();
+
+            // Switch screens based on session state
+            if (currentSession && currentSession.active) {
+                switchToScreen('practice');
+            } else {
+                switchToScreen('stats');
+            }
+        }
+
         // Initial load
         loadUsers();
         loadMidiStatus();
         loadStatus();
         loadRecentSessions();
+        loadWeeklyStats();
+        startStatsRefresh();
     </script>
 </body>
 </html>

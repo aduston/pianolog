@@ -1,0 +1,3 @@
+1. QA: I'm in the stats screen and I turn off the piano. Then I turn the piano back on. I click the "Retry Connection" button. This should trigger automatic power cycling (bypassing any cooldown period), and the button should stay disabled until the USB connection is back. (See USAGE.md for details on power cycling).
+2. Request: When in "practice" mode, after 10 seconds elapses since the playing of the last key, a countdown timer should show how many seconds are left until the session ends.
+3. Request: The index.html webpage should be open in kiosk mode on the raspberry pi display. To do this, I think we need a "kiosk script" that is put into autostart.
