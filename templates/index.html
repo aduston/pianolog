@@ -303,6 +303,43 @@
             transform: none;
         }
 
+        .countdown-timer {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #FFA726 0%, #FB8C00 100%);
+            border-radius: 10px;
+            text-align: center;
+            animation: pulse-warning 1s infinite;
+        }
+
+        .countdown-timer.active {
+            display: block;
+        }
+
+        .countdown-text {
+            color: white;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .countdown-value {
+            color: white;
+            font-size: 3em;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        @keyframes pulse-warning {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
         .user-selector h3 {
             margin-bottom: 15px;
             color: #333;
@@ -532,6 +569,11 @@
                 </div>
             </div>
 
+            <div class="countdown-timer" id="countdownTimer">
+                <div class="countdown-text">Session ending soon...</div>
+                <div class="countdown-value" id="countdownValue">5</div>
+            </div>
+
             <div class="session-controls" id="sessionControls">
                 <button class="end-session-button" id="endSessionButton" onclick="endSession()">End Session</button>
             </div>
@@ -560,6 +602,9 @@
         let midiConnected = false;
         let weeklyStats = {};
         let statsRefreshInterval = null;
+        let lastActivityTime = null;
+        let countdownTimer = null;
+        let countdownCheckInterval = null;
 
         // Connection status
         socket.on('connect', () => {
@@ -584,6 +629,8 @@
         socket.on('session_started', (data) => {
             console.log('Session started:', data);
             currentSession = data;
+            lastActivityTime = Date.now();
+            startCountdownCheck();
             updateStatus();
             switchToScreen('practice');
             loadRecentSessions();
@@ -592,6 +639,8 @@
         socket.on('session_ended', (data) => {
             console.log('Session ended:', data);
             currentSession = null;
+            lastActivityTime = null;
+            stopCountdownCheck();
             updateStatus();
             switchToScreen('stats');
             loadRecentSessions();
@@ -604,6 +653,10 @@
                 currentSession.note_count = data.note_count;
                 currentSession.duration = data.duration;
                 updateSessionInfo();
+
+                // Update last activity time and reset countdown
+                lastActivityTime = Date.now();
+                hideCountdown();
             }
         });
 
@@ -711,11 +764,16 @@
 
                 if (data.active) {
                     currentSession = data;
+                    // Don't set lastActivityTime here - wait for actual key press events
+                    // This ensures countdown only triggers after real inactivity, not on page load
                     startDurationTimer();
+                    startCountdownCheck();
                     switchToScreen('practice');
                 } else {
                     currentSession = null;
+                    lastActivityTime = null;
                     stopDurationTimer();
+                    stopCountdownCheck();
                     switchToScreen('stats');
                 }
 
@@ -812,6 +870,53 @@
                 clearInterval(durationTimer);
                 durationTimer = null;
             }
+        }
+
+        // Start countdown check (runs every 100ms to check if we should show countdown)
+        function startCountdownCheck() {
+            stopCountdownCheck();
+            countdownCheckInterval = setInterval(() => {
+                if (currentSession && currentSession.active && lastActivityTime) {
+                    const timeSinceActivity = (Date.now() - lastActivityTime) / 1000;
+
+                    // Show countdown after 10 seconds of inactivity
+                    if (timeSinceActivity >= 10) {
+                        // Calculate seconds remaining until 15-second timeout
+                        const secondsRemaining = Math.max(0, Math.ceil(15 - timeSinceActivity));
+                        showCountdown(secondsRemaining);
+
+                        if (secondsRemaining === 0) {
+                            hideCountdown();
+                        }
+                    } else {
+                        hideCountdown();
+                    }
+                }
+            }, 100);
+        }
+
+        // Stop countdown check
+        function stopCountdownCheck() {
+            if (countdownCheckInterval) {
+                clearInterval(countdownCheckInterval);
+                countdownCheckInterval = null;
+            }
+            hideCountdown();
+        }
+
+        // Show countdown timer with specified seconds
+        function showCountdown(seconds) {
+            const countdownTimer = document.getElementById('countdownTimer');
+            const countdownValue = document.getElementById('countdownValue');
+
+            countdownValue.textContent = seconds;
+            countdownTimer.classList.add('active');
+        }
+
+        // Hide countdown timer
+        function hideCountdown() {
+            const countdownTimer = document.getElementById('countdownTimer');
+            countdownTimer.classList.remove('active');
         }
 
         // Set user
