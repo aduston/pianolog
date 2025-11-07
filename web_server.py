@@ -160,9 +160,10 @@ class PianologWebServer:
 
         @self.app.route('/api/midi/reconnect', methods=['POST'])
         def reconnect_midi():
-            """Trigger MIDI reconnection attempt."""
+            """Trigger MIDI reconnection attempt with automatic power cycling."""
             midi_monitor = self.practice_tracker.midi_monitor
-            success = midi_monitor.connect()
+            # Use force_reconnect_with_power_cycle to bypass cooldown and force power cycle
+            success = midi_monitor.force_reconnect_with_power_cycle()
             return jsonify({
                 'success': success,
                 'connected': midi_monitor.is_connected,

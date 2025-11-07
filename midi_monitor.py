@@ -131,6 +131,43 @@ class MidiMonitor:
                     self.on_midi_disconnected()
             return False
 
+    def force_reconnect_with_power_cycle(self) -> bool:
+        """
+        Force a reconnection attempt with USB power cycling, bypassing cooldown.
+        This is called when the user manually triggers reconnection via the UI.
+
+        Returns:
+            True if reconnection successful, False otherwise
+        """
+        logger.info("Manual reconnection requested - forcing USB power cycle")
+
+        # Disconnect current connection if any
+        if self.inport:
+            try:
+                self.inport.close()
+            except:
+                pass
+            self.inport = None
+
+        # First try a simple connection (device might already be available)
+        if self.connect():
+            logger.info("Manual reconnection successful without power cycle")
+            return True
+
+        # If simple connection fails and USB reset is enabled, force power cycle
+        if self.enable_usb_reset:
+            logger.info("Simple connection failed - performing USB power cycle")
+            if self.reset_usb_port(bypass_cooldown=True):
+                # Update tracking after successful reset
+                self.last_usb_reset_time = time.time()
+                self.reconnect_attempts = 0
+                self.usb_reset_performed = True
+
+                # Try to connect after power cycle
+                return self.connect()
+
+        return False
+
     def disconnect(self):
         """Disconnect from MIDI device."""
         if self.inport:
@@ -164,13 +201,14 @@ class MidiMonitor:
             logger.error(f"Error checking device health: {e}")
             return False
 
-    def reset_usb_port(self, port: int = 1) -> bool:
+    def reset_usb_port(self, port: int = 1, bypass_cooldown: bool = False) -> bool:
         """
         Power-cycle the USB port to force device re-enumeration.
         This works around piano firmware issues that prevent proper USB re-initialization.
 
         Args:
             port: USB port number (1-4 on Raspberry Pi 4)
+            bypass_cooldown: If True, bypass the cooldown period check
 
         Returns:
             True if reset was successful, False otherwise

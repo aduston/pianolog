@@ -1024,11 +1024,18 @@
                 midiStatusText.textContent = 'USB Piano Connected';
                 midiDeviceName.textContent = deviceName || '';
                 retryButton.style.display = 'none';
+                // Reset button state for next time
+                retryButton.disabled = false;
+                retryButton.textContent = 'Retry Connection';
             } else {
                 midiStatus.className = 'midi-status disconnected';
                 midiStatusText.textContent = 'USB is disconnected';
                 midiDeviceName.textContent = 'Waiting for piano...';
                 retryButton.style.display = 'block';
+                // Only enable the button if it's not currently processing a retry
+                if (retryButton.textContent === 'Retry Connection') {
+                    retryButton.disabled = false;
+                }
             }
         }
 
@@ -1036,7 +1043,7 @@
         async function retryMidiConnection() {
             const retryButton = document.getElementById('retryButton');
             retryButton.disabled = true;
-            retryButton.textContent = 'Retrying...';
+            retryButton.textContent = 'Power cycling USB...';
 
             try {
                 const response = await fetch(basePath + '/api/midi/reconnect', {
@@ -1045,19 +1052,18 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // Connection successful - MIDI status will be updated via WebSocket event
                     midiConnected = true;
                     updateMidiStatus(true, data.device);
                 } else {
-                    // Still disconnected
-                    setTimeout(() => {
-                        retryButton.disabled = false;
-                        retryButton.textContent = 'Retry Connection';
-                    }, 2000);
+                    // Connection failed - keep button disabled and wait for connection
+                    // The button will be re-enabled only when midi_connected event is received
+                    retryButton.textContent = 'Waiting for piano...';
                 }
             } catch (error) {
                 console.error('Error retrying MIDI connection:', error);
-                retryButton.disabled = false;
-                retryButton.textContent = 'Retry Connection';
+                // On error, keep button disabled with waiting message
+                retryButton.textContent = 'Waiting for piano...';
             }
         }
 
