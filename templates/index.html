@@ -871,13 +871,6 @@
                 </div>
             </div>
 
-            <div class="user-selector" id="userSelector">
-                <h3 id="userSelectorTitle">Who's practicing?</h3>
-                <div class="user-buttons" id="userButtons">
-                    <!-- User buttons will be dynamically generated -->
-                </div>
-            </div>
-
             <div class="countdown-timer" id="countdownTimer">
                 <div class="countdown-text">Session ending soon...</div>
                 <div class="countdown-value" id="countdownValue">5</div>
@@ -941,6 +934,7 @@
             console.log('Session started:', data);
             currentSession = data;
             lastActivityTime = Date.now();
+            startDurationTimer();
             startCountdownCheck();
             updateStatus();
             switchToScreen('practice');
@@ -969,11 +963,6 @@
                 lastActivityTime = Date.now();
                 hideCountdown();
             }
-        });
-
-        socket.on('user_changed', (data) => {
-            console.log('User changed:', data);
-            loadStatus();
         });
 
         socket.on('midi_connected', (data) => {
@@ -1005,13 +994,6 @@
             try {
                 const response = await fetch(basePath + '/api/users');
                 configuredUsers = await response.json();
-
-                // Generate user buttons dynamically
-                const userButtonsContainer = document.getElementById('userButtons');
-                userButtonsContainer.innerHTML = configuredUsers.map(user =>
-                    `<button class="user-button" onclick="setUser('${user.name}')">${user.name}</button>`
-                ).join('');
-
                 console.log('Loaded users:', configuredUsers);
             } catch (error) {
                 console.error('Error loading users:', error);
@@ -1112,13 +1094,6 @@
             const statusText = document.getElementById('statusText');
             const sessionInfo = document.getElementById('sessionInfo');
             const sessionControls = document.getElementById('sessionControls');
-            const userSelector = document.getElementById('userSelector');
-            const userSelectorTitle = document.getElementById('userSelectorTitle');
-
-            // Update user button highlighting
-            document.querySelectorAll('.user-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
 
             if (currentSession && currentSession.active) {
                 // Active session - show practice screen
@@ -1127,19 +1102,8 @@
                 sessionInfo.style.display = 'grid';
                 updateSessionInfo();
 
-                // Show end session button and change user selector context
+                // Show end session button
                 sessionControls.className = 'session-controls active';
-                userSelector.style.display = 'block';
-                userSelector.className = 'user-selector during-session';
-                userSelectorTitle.textContent = 'Switch to:';
-
-                // Highlight active user button (case-insensitive comparison)
-                const userButtons = document.querySelectorAll('.user-button');
-                userButtons.forEach(btn => {
-                    if (btn.textContent.toLowerCase() === currentSession.user.toLowerCase()) {
-                        btn.classList.add('active');
-                    }
-                });
             } else {
                 // No active session - should be in stats screen, not practice screen
                 // The practice screen UI doesn't need to be updated because we switch to stats

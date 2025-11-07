@@ -95,13 +95,6 @@ class PracticeTracker:
         self.current_user = user_id
         logger.info(f"Current user set to: {user_id}")
 
-        # Notify web server of user change
-        if self.web_server:
-            self.web_server.socketio.emit('user_changed', {
-                'user': user_id,
-                'timestamp': time.time()
-            })
-
     def _play_prompt(self):
         """Play prompt melody to ask for user selection."""
         try:

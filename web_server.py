@@ -84,12 +84,6 @@ class PianologWebServer:
 
             self.practice_tracker.set_user(user_id)
 
-            # Notify all connected clients
-            self.socketio.emit('user_changed', {
-                'user': user_id,
-                'timestamp': time.time()
-            })
-
             return jsonify({'success': True, 'user': user_id})
 
         @self.app.route('/api/sessions/recent')
@@ -271,6 +265,9 @@ class PianologWebServer:
             self.socketio.emit('session_started', {
                 'user': self.practice_tracker.current_user,
                 'start_time': session_info['start_time'],
+                'active': True,
+                'note_count': session_info['note_count'],
+                'duration': session_info['duration'],
                 'timestamp': time.time()
             })
 
