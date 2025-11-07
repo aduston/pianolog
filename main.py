@@ -41,6 +41,10 @@ class PracticeTracker:
             web_port: Port for the web server (defaults to config.WEB_PORT)
         """
         self.db = PracticeDatabase()
+
+        # Migrate users from config to database if needed
+        self.db.migrate_users_from_config(config.USERS)
+
         self.detector = PracticeDetector(
             activity_threshold=config.ACTIVITY_THRESHOLD,
             activity_window=config.ACTIVITY_WINDOW,
@@ -54,8 +58,8 @@ class PracticeTracker:
         self.prompt_on_session_start = prompt_on_session_start
         self.waiting_for_user = False
 
-        # User selection mapping from config
-        self.user_notes = config.USERS
+        # User selection mapping - load from database
+        self._load_user_notes()
 
         # Web server
         self.web_server = None
@@ -74,6 +78,12 @@ class PracticeTracker:
         # Timeout checker thread
         self.timeout_thread = None
         self.running = False
+
+    def _load_user_notes(self):
+        """Load user->note mapping from database."""
+        users = self.db.get_users()
+        self.user_notes = {user['trigger_note']: user['name'] for user in users}
+        logger.info(f"Loaded {len(self.user_notes)} users from database")
 
     def set_user(self, user_id: str):
         """

@@ -54,6 +54,18 @@ class PracticeDatabase:
             )
         ''')
 
+        # Create users table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                trigger_note INTEGER NOT NULL UNIQUE,
+                tombstoned INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
         # Create indexes for common queries
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_user_date
@@ -257,6 +269,116 @@ class PracticeDatabase:
             })
 
         return stats
+
+    def get_users(self, include_tombstoned: bool = False) -> List[Dict]:
+        """
+        Get all users from the database.
+
+        Args:
+            include_tombstoned: Whether to include tombstoned users
+
+        Returns:
+            List of user dictionaries
+        """
+        cursor = self.conn.cursor()
+        if include_tombstoned:
+            cursor.execute('''
+                SELECT id, name, trigger_note, tombstoned, created_at, updated_at
+                FROM users
+                ORDER BY name
+            ''')
+        else:
+            cursor.execute('''
+                SELECT id, name, trigger_note, tombstoned, created_at, updated_at
+                FROM users
+                WHERE tombstoned = 0
+                ORDER BY name
+            ''')
+
+        return [dict(row) for row in cursor.fetchall()]
+
+    def add_user(self, name: str, trigger_note: int) -> int:
+        """
+        Add a new user to the database.
+
+        Args:
+            name: User's name
+            trigger_note: MIDI note number that activates this user
+
+        Returns:
+            User ID of the inserted record
+
+        Raises:
+            sqlite3.IntegrityError: If name or trigger_note already exists
+        """
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            INSERT INTO users (name, trigger_note)
+            VALUES (?, ?)
+        ''', (name, trigger_note))
+
+        self.conn.commit()
+        user_id = cursor.lastrowid
+
+        logger.info(f"Added user {user_id}: {name}, trigger_note={trigger_note}")
+        return user_id
+
+    def delete_user(self, user_id: int):
+        """
+        Tombstone a user (soft delete).
+
+        Args:
+            user_id: ID of the user to tombstone
+        """
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            UPDATE users
+            SET tombstoned = 1, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (user_id,))
+
+        self.conn.commit()
+        logger.info(f"Tombstoned user {user_id}")
+
+    def get_user_by_note(self, trigger_note: int) -> Optional[Dict]:
+        """
+        Get a user by their trigger note.
+
+        Args:
+            trigger_note: MIDI note number
+
+        Returns:
+            User dictionary or None if not found
+        """
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT id, name, trigger_note, tombstoned, created_at, updated_at
+            FROM users
+            WHERE trigger_note = ? AND tombstoned = 0
+        ''', (trigger_note,))
+
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+    def migrate_users_from_config(self, users_dict: Dict[int, str]):
+        """
+        Migrate users from config.USERS dict to database.
+        Only adds users that don't already exist.
+
+        Args:
+            users_dict: Dictionary mapping trigger_note to name
+        """
+        for trigger_note, name in users_dict.items():
+            cursor = self.conn.cursor()
+            cursor.execute('''
+                SELECT id FROM users WHERE name = ? OR trigger_note = ?
+            ''', (name, trigger_note))
+
+            if not cursor.fetchone():
+                self.add_user(name, trigger_note)
+                logger.info(f"Migrated user from config: {name} (note {trigger_note})")
+            else:
+                logger.info(f"User {name} already exists in database, skipping migration")
 
     def close(self):
         """Close database connection."""

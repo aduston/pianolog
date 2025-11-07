@@ -7,8 +7,10 @@ sleep 10
 
 # Disable screen blanking and screensaver
 xset s off
-xset -dpms
 xset s noblank
+# Note: -dpms option not supported on this display, skipping
+
+# Don't auto-start keyboard - wvkbd will be toggled via the keyboard button
 
 # Start chromium in kiosk mode
 chromium-browser \

@@ -3,7 +3,8 @@ Web server for pianolog - provides a web interface for viewing and managing prac
 """
 import logging
 import threading
-from flask import Flask, render_template, jsonify, request
+import json
+from flask import Flask, render_template, jsonify, request, make_response
 from flask_socketio import SocketIO, emit
 from database import PracticeDatabase
 import time
@@ -31,6 +32,7 @@ class PianologWebServer:
         # Create Flask app
         self.app = Flask(__name__)
         self.app.config['SECRET_KEY'] = 'pianolog-secret-key-change-in-production'
+        self.app.config['JSON_SORT_KEYS'] = False
 
         # Create SocketIO instance
         self.socketio = SocketIO(self.app, cors_allowed_origins='*')
@@ -108,12 +110,49 @@ class PianologWebServer:
         @self.app.route('/api/users')
         def get_users():
             """Get configured users for the web interface."""
-            # Convert USERS dict to list of {note, name} objects
+            # Get users from database instead of config
+            users = self.practice_tracker.db.get_users()
             users_list = [
-                {'note': note, 'name': name}
-                for note, name in config.USERS.items()
+                {'id': user['id'], 'note': user['trigger_note'], 'name': user['name']}
+                for user in users
             ]
             return jsonify(users_list)
+
+        @self.app.route('/api/users/add', methods=['POST'])
+        def add_user():
+            """Add a new user."""
+            data = request.get_json()
+            name = data.get('name')
+            trigger_note = data.get('trigger_note')
+
+            if not name or trigger_note is None:
+                return jsonify({'error': 'name and trigger_note are required'}), 400
+
+            try:
+                user_id = self.practice_tracker.db.add_user(name, trigger_note)
+                # Reload user notes mapping in main tracker
+                self.practice_tracker._load_user_notes()
+                return jsonify({'success': True, 'user_id': user_id, 'name': name, 'trigger_note': trigger_note})
+            except Exception as e:
+                return jsonify({'error': str(e)}), 400
+
+        @self.app.route('/api/users/<int:user_id>', methods=['DELETE'])
+        def delete_user(user_id):
+            """Tombstone a user."""
+            try:
+                self.practice_tracker.db.delete_user(user_id)
+                # Reload user notes mapping in main tracker
+                self.practice_tracker._load_user_notes()
+                return jsonify({'success': True})
+            except Exception as e:
+                return jsonify({'error': str(e)}), 400
+
+        @self.app.route('/api/config')
+        def get_config():
+            """Get configuration values for the web interface."""
+            return jsonify({
+                'session_timeout': config.SESSION_TIMEOUT
+            })
 
         @self.app.route('/api/midi/status')
         def get_midi_status():
@@ -148,14 +187,33 @@ class PianologWebServer:
 
         @self.app.route('/api/stats/weekly')
         def get_weekly_stats():
-            """Get weekly practice stats for all users."""
-            # Get all users from config
-            all_stats = {}
-            for note, user_id in config.USERS.items():
-                stats = self.practice_tracker.db.get_weekly_stats(user_id)
-                all_stats[user_id] = stats
+            """Get weekly practice stats for all users, sorted by practice time."""
+            from collections import OrderedDict
 
-            return jsonify(all_stats)
+            # Get all users from database
+            users = self.practice_tracker.db.get_users()
+            all_stats = {}
+            user_totals = []
+
+            for user in users:
+                user_name = user['name']
+                stats = self.practice_tracker.db.get_weekly_stats(user_name)
+                all_stats[user_name] = stats
+
+                # Calculate total practice minutes for sorting
+                total_minutes = sum(day['minutes'] for day in stats)
+                user_totals.append((user_name, total_minutes))
+
+            # Sort users by total practice minutes (descending)
+            user_totals.sort(key=lambda x: x[1], reverse=True)
+
+            # Return stats in sorted order using OrderedDict to preserve order
+            sorted_stats = OrderedDict((user_name, all_stats[user_name]) for user_name, _ in user_totals)
+
+            # Use json.dumps with ensure_ascii=False to preserve key order
+            response = make_response(json.dumps(sorted_stats, ensure_ascii=False))
+            response.headers['Content-Type'] = 'application/json'
+            return response
 
         @self.app.route('/api/target/<user_id>', methods=['GET'])
         def get_user_target(user_id):
@@ -174,6 +232,37 @@ class PianologWebServer:
 
             self.practice_tracker.db.set_user_target(user_id, target_minutes)
             return jsonify({'success': True, 'user_id': user_id, 'target_minutes': target_minutes})
+
+        @self.app.route('/api/keyboard/toggle', methods=['POST'])
+        def toggle_keyboard():
+            """Toggle on-screen keyboard (wvkbd for Wayland compatibility)."""
+            import subprocess
+            import os
+            try:
+                # Check if wvkbd is running
+                result = subprocess.run(
+                    ['pgrep', '-x', 'wvkbd-mobintl'],
+                    capture_output=True
+                )
+
+                if result.returncode == 0:
+                    # wvkbd is running, toggle visibility with SIGUSR2
+                    subprocess.run(['pkill', '-USR2', 'wvkbd-mobintl'])
+                    logger.info("wvkbd keyboard toggled")
+                else:
+                    # wvkbd is not running, start it hidden (will show on first toggle)
+                    # Use nohup and shell to properly daemonize the process
+                    subprocess.Popen(
+                        'nohup wvkbd-mobintl --hidden -L 200 >/dev/null 2>&1 &',
+                        shell=True,
+                        start_new_session=True,
+                        preexec_fn=os.setpgrp if hasattr(os, 'setpgrp') else None
+                    )
+                    logger.info("wvkbd keyboard started")
+                return jsonify({'success': True})
+            except Exception as e:
+                logger.error(f"Error toggling keyboard: {e}")
+                return jsonify({'error': str(e)}), 500
 
     def notify_session_start(self):
         """Notify clients that a session has started."""
