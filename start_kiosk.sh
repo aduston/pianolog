@@ -22,4 +22,5 @@ chromium-browser \
   --disable-features=TranslateUI \
   --disable-component-update \
   --check-for-update-interval=31536000 \
+  --password-store=basic \
   http://localhost:5000
