@@ -10,8 +10,6 @@ xset s off
 xset s noblank
 # Note: -dpms option not supported on this display, skipping
 
-# Don't auto-start keyboard - wvkbd will be toggled via the keyboard button
-
 # Start chromium in kiosk mode
 chromium-browser \
   --kiosk \
@@ -23,4 +21,4 @@ chromium-browser \
   --disable-component-update \
   --check-for-update-interval=31536000 \
   --password-store=basic \
-  http://localhost:5000
+  http://localhost:5000?kiosk=true

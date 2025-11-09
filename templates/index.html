@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pianolog - Practice Tracker</title>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        // Load KioskBoard dynamically with correct path for nginx proxy support
+        // Store a promise that resolves when KioskBoard is loaded
+        window.kioskBoardLoaded = new Promise((resolve, reject) => {
+            const basePath = window.location.pathname.startsWith('/pianolog') ? '/pianolog' : '';
+            const script = document.createElement('script');
+            script.src = basePath + '/static/kioskboard/kioskboard-aio-2.3.0.min.js';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load KioskBoard'));
+            document.head.appendChild(script);
+        });
+    </script>
     <style>
         * {
             margin: 0;
@@ -686,36 +698,6 @@
             transform: none;
         }
 
-        /* Keyboard toggle button for kiosk mode */
-        .keyboard-toggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background: rgba(102, 126, 234, 0.9);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.5em;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 2000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .keyboard-toggle:hover {
-            background: rgba(85, 104, 211, 0.95);
-            transform: scale(1.1);
-        }
-
-        .user-mgmt-screen.active .keyboard-toggle {
-            display: flex;
-        }
-
         /* Stats carousel for landscape mode */
         @media (min-width: 768px) and (orientation: landscape) {
             .stats-carousel-container {
@@ -798,7 +780,7 @@
     <div class="container">
         <header>
             <h1>🎹 Pianolog</h1>
-            <p>Piano Practice Tracker <span style="font-size: 0.7em; opacity: 0.7;">v2.3</span></p>
+            <p>Piano Practice Tracker <span style="font-size: 0.7em; opacity: 0.7;">v2.5-kb</span></p>
         </header>
 
         <!-- MIDI Status (shown on both screens) -->
@@ -839,17 +821,16 @@
                     <form id="addUserForm" onsubmit="addUser(event)">
                         <div class="form-group">
                             <label for="userName">Name:</label>
-                            <input type="text" id="userName" name="userName" required inputmode="text">
+                            <input type="text" id="userName" name="userName" class="kioskboard-input" data-kioskboard-type="keyboard" required inputmode="text">
                         </div>
                         <div class="form-group">
                             <label for="userNote">MIDI Note (e.g., 60 for Middle C):</label>
-                            <input type="number" id="userNote" name="userNote" min="0" max="127" required inputmode="numeric">
+                            <input type="number" id="userNote" name="userNote" class="kioskboard-input" data-kioskboard-type="numpad" min="0" max="127" required inputmode="numeric">
                         </div>
                         <button type="submit" class="submit-button" id="addUserSubmit">Add User</button>
                     </form>
                 </div>
             </div>
-            <button class="keyboard-toggle" onclick="toggleKeyboard()" title="Toggle Keyboard">⌨️</button>
         </div>
 
         <!-- Practice Screen (shown when practicing) -->
@@ -1655,16 +1636,6 @@
             }
         }
 
-        // Toggle on-screen keyboard for kiosk mode
-        function toggleKeyboard() {
-            // Send command to show/hide onboard keyboard via server
-            fetch(basePath + '/api/keyboard/toggle', {
-                method: 'POST'
-            }).catch(error => {
-                console.error('Error toggling keyboard:', error);
-            });
-        }
-
         // Start periodic stats refresh (every 5 minutes)
         function startStatsRefresh() {
             if (statsRefreshInterval) {
@@ -1687,28 +1658,68 @@
             }
         }
 
-        // Show virtual keyboard on input focus (for touchscreen kiosk)
-        function showVirtualKeyboard() {
-            // Trigger matchbox-keyboard if available
-            if (window.matchbox) {
-                window.matchbox.show();
-            }
-        }
+        // Initialize KioskBoard for kiosk mode
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check if we're in kiosk mode via URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const isKioskMode = urlParams.get('kiosk') === 'true';
 
-        function hideVirtualKeyboard() {
-            // Hide matchbox-keyboard if available
-            if (window.matchbox) {
-                window.matchbox.hide();
-            }
-        }
+            if (isKioskMode) {
+                // Wait for KioskBoard to load before initializing
+                try {
+                    await window.kioskBoardLoaded;
+                } catch (error) {
+                    console.error('Failed to load KioskBoard:', error);
+                    return;
+                }
 
-        // Add event listeners to all input fields for virtual keyboard
-        document.addEventListener('DOMContentLoaded', function() {
-            const inputs = document.querySelectorAll('input[type="text"], input[type="number"]');
-            inputs.forEach(input => {
-                input.addEventListener('focus', showVirtualKeyboard);
-                input.addEventListener('blur', hideVirtualKeyboard);
-            });
+                // Initialize KioskBoard with light theme and default QWERTY layout
+                KioskBoard.init({
+                    keysArrayOfObjects: [
+                        {"0": "Q", "1": "W", "2": "E", "3": "R", "4": "T", "5": "Y", "6": "U", "7": "I", "8": "O", "9": "P"},
+                        {"0": "A", "1": "S", "2": "D", "3": "F", "4": "G", "5": "H", "6": "J", "7": "K", "8": "L"},
+                        {"0": "Z", "1": "X", "2": "C", "3": "V", "4": "B", "5": "N", "6": "M"}
+                    ],
+                    keysArrayOfNumbers: [
+                        {"0": "7", "1": "8", "2": "9"},
+                        {"0": "4", "1": "5", "2": "6"},
+                        {"0": "1", "1": "2", "2": "3"},
+                        {"0": "0"}
+                    ],
+                    theme: 'light',
+                    capsLockActive: false,
+                    allowRealKeyboard: true,
+                    allowMobileKeyboard: false,
+                    cssAnimations: true,
+                    cssAnimationsDuration: 360,
+                    cssAnimationsStyle: 'slide',
+                    keysAllowSpacebar: true,
+                    keysSpacebarText: 'Space',
+                    keysEnterText: 'Close',
+                    keysEnterCanClose: true,
+                    keysFontFamily: 'sans-serif',
+                    keysFontSize: '22px',
+                    keysFontWeight: 'normal',
+                    keysIconSize: '25px',
+                });
+
+                // Run KioskBoard on all inputs (keyboard type determined by data-kioskboard-type attribute)
+                KioskBoard.run('.kioskboard-input');
+
+                // Auto-close keyboard on form submission
+                const addUserForm = document.getElementById('addUserForm');
+                if (addUserForm) {
+                    addUserForm.addEventListener('submit', function() {
+                        // Close KioskBoard after a brief delay to allow form submission
+                        setTimeout(() => {
+                            const activeKeyboard = document.querySelector('.kioskboard-wrapper');
+                            if (activeKeyboard) {
+                                activeKeyboard.remove();
+                            }
+                        }, 100);
+                    });
+                }
+            }
         });
 
         // Initial load

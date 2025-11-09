@@ -228,37 +228,6 @@ class PianologWebServer:
             self.practice_tracker.db.set_user_target(user_id, target_minutes)
             return jsonify({'success': True, 'user_id': user_id, 'target_minutes': target_minutes})
 
-        @self.app.route('/api/keyboard/toggle', methods=['POST'])
-        def toggle_keyboard():
-            """Toggle on-screen keyboard (wvkbd for Wayland compatibility)."""
-            import subprocess
-            import os
-            try:
-                # Check if wvkbd is running
-                result = subprocess.run(
-                    ['pgrep', '-x', 'wvkbd-mobintl'],
-                    capture_output=True
-                )
-
-                if result.returncode == 0:
-                    # wvkbd is running, toggle visibility with SIGUSR2
-                    subprocess.run(['pkill', '-USR2', 'wvkbd-mobintl'])
-                    logger.info("wvkbd keyboard toggled")
-                else:
-                    # wvkbd is not running, start it hidden (will show on first toggle)
-                    # Use nohup and shell to properly daemonize the process
-                    subprocess.Popen(
-                        'nohup wvkbd-mobintl --hidden -L 200 >/dev/null 2>&1 &',
-                        shell=True,
-                        start_new_session=True,
-                        preexec_fn=os.setpgrp if hasattr(os, 'setpgrp') else None
-                    )
-                    logger.info("wvkbd keyboard started")
-                return jsonify({'success': True})
-            except Exception as e:
-                logger.error(f"Error toggling keyboard: {e}")
-                return jsonify({'error': str(e)}), 500
-
     def notify_session_start(self):
         """Notify clients that a session has started."""
         session_info = self.practice_tracker.detector.get_session_info()
