@@ -33,6 +33,8 @@ class PianologWebServer:
         self.app = Flask(__name__)
         self.app.config['SECRET_KEY'] = 'pianolog-secret-key-change-in-production'
         self.app.config['JSON_SORT_KEYS'] = False
+        self.app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable caching for development
+        self.app.config['TEMPLATES_AUTO_RELOAD'] = True  # Auto-reload templates
 
         # Create SocketIO instance
         self.socketio = SocketIO(self.app, cors_allowed_origins='*')
@@ -50,7 +52,11 @@ class PianologWebServer:
         @self.app.route('/')
         def index():
             """Serve the main page."""
-            return render_template('index.html')
+            response = make_response(render_template('index.html'))
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+            return response
 
         @self.app.route('/api/status')
         def get_status():
@@ -83,6 +89,30 @@ class PianologWebServer:
                 return jsonify({'error': 'user_id is required'}), 400
 
             self.practice_tracker.set_user(user_id)
+
+            return jsonify({'success': True, 'user': user_id})
+
+        @self.app.route('/api/user/activate', methods=['POST'])
+        def activate_user():
+            """Activate a user and start their practice session (button-based activation)."""
+            data = request.get_json()
+            user_id = data.get('user_id')
+
+            if not user_id:
+                return jsonify({'error': 'user_id is required'}), 400
+
+            # Set the user
+            self.practice_tracker.set_user(user_id)
+
+            # Clear waiting_for_user flag BEFORE starting session
+            # This ensures _on_session_start callback sees the correct state
+            self.practice_tracker.waiting_for_user = False
+
+            # Play confirmation chord
+            self.practice_tracker._play_confirmation()
+
+            # Force start the session (this will trigger _on_session_start callback)
+            self.practice_tracker.detector.force_start_session()
 
             return jsonify({'success': True, 'user': user_id})
 
@@ -275,6 +305,13 @@ class PianologWebServer:
         """Notify clients that MIDI device disconnected."""
         logger.info("Notifying clients: MIDI disconnected")
         self.socketio.emit('midi_disconnected', {
+            'timestamp': time.time()
+        })
+
+    def notify_user_selection_prompt(self):
+        """Notify clients to show user selection screen."""
+        logger.info("Notifying clients: User selection prompt")
+        self.socketio.emit('user_selection_prompt', {
             'timestamp': time.time()
         })
 

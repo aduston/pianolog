@@ -191,6 +191,10 @@ class PracticeTracker:
             # Play prompt melody
             self._play_prompt()
 
+            # Notify web server to show user selection screen
+            if self.web_server:
+                self.web_server.notify_user_selection_prompt()
+
             # Set flag to wait for user selection
             self.waiting_for_user = True
             return

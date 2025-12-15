@@ -128,11 +128,14 @@ class PracticeDetector:
         """Force start a session (e.g., after user selection in prompt mode)."""
         if not self.practice_session_active:
             self._start_session()
+        else:
+            logger.warning("force_start_session called but session already active")
 
     def _start_session(self):
         """Start a new practice session."""
         self.practice_session_active = True
         self.session_start_time = time.time()
+        self.last_note_time = time.time()  # Set last_note_time to prevent immediate timeout
         self.session_note_count = 0
 
         logger.info(f"Practice session started at {time.strftime('%H:%M:%S', time.localtime(self.session_start_time))}")
@@ -156,7 +159,7 @@ class PracticeDetector:
             if self.on_session_end:
                 self.on_session_end(self.session_start_time, end_time, self.session_note_count)
         else:
-            logger.info(f"Session too short ({duration:.1f}s), not saving")
+            logger.info(f"Session too short ({duration:.1f}s), not saving (note_count={self.session_note_count})")
 
         # Reset session state
         self.practice_session_active = False

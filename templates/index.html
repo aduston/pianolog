@@ -507,6 +507,36 @@
             opacity: 1;
         }
 
+        /* Bar popover styles */
+        .bar-popover {
+            position: fixed;
+            background: white;
+            border-radius: 10px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 2000;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .bar-popover-title {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .bar-popover-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .bar-popover-label {
+            font-size: 0.75em;
+            color: #999;
+            margin-top: 3px;
+        }
+
         .stats-summary {
             display: flex;
             justify-content: space-around;
@@ -555,6 +585,76 @@
         /* Keep MIDI status visible on both screens */
         .midi-status-container {
             margin-bottom: 20px;
+        }
+
+        /* User selection screen styles */
+        .user-selection-screen {
+            display: none;
+        }
+
+        .user-selection-screen.active {
+            display: block;
+        }
+
+        .user-selection-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .user-selection-title {
+            font-size: 2em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .user-selection-subtitle {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .user-selection-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .user-select-button {
+            padding: 20px 30px;
+            font-size: 1.3em;
+            font-weight: 600;
+            border: 3px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-select-button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .user-select-button .user-name {
+            flex: 1;
+            text-align: left;
+        }
+
+        .user-select-button .trigger-note {
+            font-size: 0.8em;
+            opacity: 0.7;
         }
 
         /* User management screen styles */
@@ -780,7 +880,7 @@
     <div class="container">
         <header>
             <h1>🎹 Pianolog</h1>
-            <p>Piano Practice Tracker <span style="font-size: 0.7em; opacity: 0.7;">v2.5-kb</span></p>
+            <p>Piano Practice Tracker <span style="font-size: 0.7em; opacity: 0.7;">v2.6</span></p>
         </header>
 
         <!-- MIDI Status (shown on both screens) -->
@@ -801,6 +901,17 @@
                 <!-- User stats cards will be dynamically generated -->
             </div>
             <div id="carouselNavPlaceholder"></div>
+        </div>
+
+        <!-- User Selection Screen (shown after note played from stats screen) -->
+        <div class="user-selection-screen" id="userSelectionScreen">
+            <div class="user-selection-card">
+                <h2 class="user-selection-title">Who's Practicing?</h2>
+                <p class="user-selection-subtitle">Click a button or play your activating note</p>
+                <div class="user-selection-buttons" id="userSelectionButtons">
+                    <!-- User selection buttons will be dynamically generated -->
+                </div>
+            </div>
         </div>
 
         <!-- User Management Screen -->
@@ -956,6 +1067,11 @@
             console.log('MIDI disconnected:', data);
             midiConnected = false;
             updateMidiStatus(false, null);
+        });
+
+        socket.on('user_selection_prompt', (data) => {
+            console.log('User selection prompt triggered:', data);
+            showUserSelection();
         });
 
         // Load configuration from server
@@ -1322,7 +1438,7 @@
                     }
 
                     return `
-                        <div class="day-bar-container">
+                        <div class="day-bar-container" onclick="showBarPopover(event, '${userId}', '${day.day_name}', ${day.minutes})">
                             <div class="${barClass}" style="height: ${height}px;">
                                 <div class="day-value">${day.minutes}m</div>
                             </div>
@@ -1396,7 +1512,7 @@
                         }
 
                         return `
-                            <div class="day-bar-container">
+                            <div class="day-bar-container" onclick="showBarPopover(event, '${userId}', '${day.day_name}', ${day.minutes})">
                                 <div class="${barClass}" style="height: ${height}px;">
                                     <div class="day-value">${day.minutes}m</div>
                                 </div>
@@ -1495,24 +1611,79 @@
             }
         }
 
-        // Switch between stats and practice screens
+        // Switch between screens
         function switchToScreen(screenName) {
             const statsScreen = document.getElementById('statsScreen');
             const practiceScreen = document.getElementById('practiceScreen');
             const userMgmtScreen = document.getElementById('userMgmtScreen');
+            const userSelectionScreen = document.getElementById('userSelectionScreen');
 
             if (screenName === 'stats') {
                 statsScreen.classList.add('active');
                 practiceScreen.classList.remove('active');
                 userMgmtScreen.classList.remove('active');
+                userSelectionScreen.classList.remove('active');
+            } else if (screenName === 'user-selection') {
+                statsScreen.classList.remove('active');
+                practiceScreen.classList.remove('active');
+                userMgmtScreen.classList.remove('active');
+                userSelectionScreen.classList.add('active');
             } else if (screenName === 'practice') {
                 statsScreen.classList.remove('active');
                 practiceScreen.classList.add('active');
                 userMgmtScreen.classList.remove('active');
+                userSelectionScreen.classList.remove('active');
             } else if (screenName === 'user-mgmt') {
                 statsScreen.classList.remove('active');
                 practiceScreen.classList.remove('active');
                 userMgmtScreen.classList.add('active');
+                userSelectionScreen.classList.remove('active');
+            }
+        }
+
+        // Show user selection screen
+        function showUserSelection() {
+            renderUserSelectionButtons();
+            switchToScreen('user-selection');
+        }
+
+        // Render user selection buttons
+        function renderUserSelectionButtons() {
+            const container = document.getElementById('userSelectionButtons');
+
+            if (configuredUsers.length === 0) {
+                container.innerHTML = '<p style="color: #666;">No users configured</p>';
+                return;
+            }
+
+            container.innerHTML = configuredUsers.map(user => {
+                const noteName = midiNoteToName(user.note);
+                return `
+                    <button class="user-select-button" onclick="selectUserForPractice('${user.name}')">
+                        <span class="user-name">${user.name}</span>
+                        <span class="trigger-note">or play ${noteName}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // Select user for practice (via button click)
+        async function selectUserForPractice(userName) {
+            try {
+                const response = await fetch(basePath + '/api/user/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: userName })
+                });
+
+                const data = await response.json();
+
+                // The session_started event from WebSocket will handle switching to practice screen
+            } catch (error) {
+                console.error('Error activating user:', error);
+                alert('Error activating user. Please try again.');
             }
         }
 
@@ -1721,6 +1892,71 @@
                 }
             }
         });
+
+        // Show bar popover with total practice time
+        function showBarPopover(event, userId, dayName, minutes) {
+            event.stopPropagation();
+
+            // Remove any existing popover
+            hideBarPopover();
+
+            // Create popover element
+            const popover = document.createElement('div');
+            popover.className = 'bar-popover';
+            popover.id = 'barPopover';
+
+            // Format the time nicely
+            const roundedMinutes = Math.round(minutes);
+            let timeDisplay;
+            if (roundedMinutes >= 60) {
+                const hours = Math.floor(roundedMinutes / 60);
+                const mins = roundedMinutes % 60;
+                timeDisplay = mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+            } else {
+                timeDisplay = `${roundedMinutes}m`;
+            }
+
+            popover.innerHTML = `
+                <div class="bar-popover-title">${userId} - ${dayName}</div>
+                <div class="bar-popover-value">${timeDisplay}</div>
+                <div class="bar-popover-label">total practice time</div>
+            `;
+
+            document.body.appendChild(popover);
+
+            // Position the popover near the clicked bar
+            const rect = event.currentTarget.getBoundingClientRect();
+            const popoverRect = popover.getBoundingClientRect();
+
+            let left = rect.left + (rect.width / 2) - (popoverRect.width / 2);
+            let top = rect.top - popoverRect.height - 10;
+
+            // Keep within viewport
+            if (left < 10) left = 10;
+            if (left + popoverRect.width > window.innerWidth - 10) {
+                left = window.innerWidth - popoverRect.width - 10;
+            }
+            if (top < 10) {
+                top = rect.bottom + 10;
+            }
+
+            popover.style.left = `${left}px`;
+            popover.style.top = `${top}px`;
+
+            // Add click listener to close popover
+            setTimeout(() => {
+                document.addEventListener('click', hideBarPopover);
+            }, 0);
+        }
+
+        // Hide bar popover
+        function hideBarPopover() {
+            const popover = document.getElementById('barPopover');
+            if (popover) {
+                popover.remove();
+            }
+            document.removeEventListener('click', hideBarPopover);
+        }
 
         // Initial load
         loadConfig();
