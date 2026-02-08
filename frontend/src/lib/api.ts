@@ -24,3 +24,7 @@ export function getMidiStatus(): Promise<MidiStatus> {
 export function endSession(): Promise<{ success: boolean; message: string }> {
   return fetchJson('/api/session/end', { method: 'POST' });
 }
+
+export function reconnectMidi(): Promise<{ success: boolean; connected: boolean; device: string | null }> {
+  return fetchJson('/api/midi/reconnect', { method: 'POST' });
+}

@@ -3,6 +3,8 @@ import { io, type Socket } from 'socket.io-client';
 import { getBasePath } from '../lib/basePath';
 
 type SocketCallbacks = {
+  onConnect?: () => void;
+  onDisconnect?: () => void;
   onSessionStarted?: () => void;
   onSessionEnded?: () => void;
   onSessionActivity?: () => void;
@@ -14,6 +16,14 @@ export function usePianologSocket(callbacks: SocketCallbacks): void {
     const basePath = getBasePath();
     const socket: Socket = io({
       path: `${basePath}/socket.io`
+    });
+
+    socket.on('connect', () => {
+      callbacks.onConnect?.();
+    });
+
+    socket.on('disconnect', () => {
+      callbacks.onDisconnect?.();
     });
 
     socket.on('session_started', () => {

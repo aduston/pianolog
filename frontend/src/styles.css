@@ -19,6 +19,24 @@ body {
   padding: 2rem 1rem 3rem;
 }
 
+.connection-status {
+  border-radius: 10px;
+  padding: 0.45rem 0.7rem;
+  display: inline-block;
+  margin-bottom: 0.8rem;
+  font-weight: 700;
+}
+
+.connection-status.connected {
+  background: #2d9b77;
+  color: #f7fffb;
+}
+
+.connection-status.disconnected {
+  background: #b64545;
+  color: #fff6f6;
+}
+
 .header {
   margin-bottom: 1rem;
 }
@@ -39,6 +57,34 @@ body {
   border-radius: 14px;
   padding: 1rem;
   backdrop-filter: blur(3px);
+}
+
+.midi-widget {
+  border-radius: 12px;
+  padding: 0.8rem 0.9rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(182, 203, 231, 0.22);
+}
+
+.midi-widget.connected {
+  background: rgba(45, 155, 119, 0.2);
+}
+
+.midi-widget.disconnected {
+  background: rgba(182, 69, 69, 0.25);
+}
+
+.midi-title {
+  font-weight: 700;
+}
+
+.midi-subtitle {
+  margin-top: 0.2rem;
+  color: #d7e1f0;
+}
+
+.midi-actions {
+  margin-top: 0.7rem;
 }
 
 .stats-grid {
@@ -66,7 +112,36 @@ body {
   width: 100%;
   background: linear-gradient(180deg, #73d7c6 0%, #3aa2b7 100%);
   border-radius: 8px 8px 3px 3px;
-  min-height: 8px;
+  min-height: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 0.15rem;
+}
+
+.bar.partial {
+  background: linear-gradient(180deg, #ffc766 0%, #d79c2b 100%);
+}
+
+.bar.met-target {
+  background: linear-gradient(180deg, #73d7c6 0%, #3aa2b7 100%);
+}
+
+.bar.empty {
+  background: linear-gradient(180deg, #52627d 0%, #3a455a 100%);
+}
+
+.bar-value {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #eff6ff;
+}
+
+.carousel-nav {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
 }
 
 .bar-wrap span {
