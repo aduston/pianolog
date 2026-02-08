@@ -1,1 +1,0 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/components/practicescreen.tsx","./src/components/statsscreen.tsx","./src/hooks/usepianologsocket.ts","./src/lib/api.ts","./src/lib/basepath.ts","./src/lib/types.ts"],"version":"5.9.3"}
