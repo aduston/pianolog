@@ -64,6 +64,22 @@ class PianologWebServer:
             response.headers['Expires'] = '0'
             return response
 
+        @self.app.route('/react')
+        def react_index():
+            """Serve the React migration page."""
+            react_entry = Path(self.app.static_folder) / "react" / "main.js"
+            if not react_entry.exists():
+                return jsonify({
+                    'error': 'React build not found',
+                    'message': 'Build frontend assets first: cd frontend && npm install && npm run build'
+                }), 503
+
+            response = make_response(render_template('react.html'))
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+            return response
+
         @self.app.route('/api/status')
         def get_status():
             """Get current session status."""

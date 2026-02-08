@@ -50,6 +50,12 @@ def main(argv: Optional[List[str]] = None):
     parser.add_argument("--show-sessions", action="store_true", help="Show recent sessions and exit")
     parser.add_argument("--show-summary", action="store_true", help="Show daily summary and exit")
     parser.add_argument("--clear-database", action="store_true", help="Clear all practice sessions from database")
+    parser.add_argument(
+        "--web-port",
+        type=int,
+        default=None,
+        help="Web server port (defaults to WEB_PORT in config.py)",
+    )
 
     args = parser.parse_args(argv)
 
@@ -106,7 +112,7 @@ def main(argv: Optional[List[str]] = None):
         return
 
     if args.prompt_each_session:
-        tracker = PracticeTracker(prompt_on_session_start=True)
+        tracker = PracticeTracker(prompt_on_session_start=True, web_port=args.web_port)
         print("\n" + "=" * 60)
         print("Piano Practice Tracker - Always-On Mode")
         print("=" * 60)
@@ -129,7 +135,7 @@ def main(argv: Optional[List[str]] = None):
                 print("No user selected. Exiting.")
                 return
 
-        tracker = PracticeTracker(prompt_on_session_start=False)
+        tracker = PracticeTracker(prompt_on_session_start=False, web_port=args.web_port)
         tracker.set_user(selected_user)
 
     def signal_handler(signum, frame):

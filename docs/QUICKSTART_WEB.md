@@ -20,6 +20,8 @@ venv/bin/pip install -r requirements.txt
 ### Option A: Direct Access (Easiest)
 Open: **http://localhost:5000**
 
+React pilot UI (after building frontend assets): **http://localhost:5000/react**
+
 Or from another device on your network: **http://raspberrypi.local:5000**
 
 ### Option B: Clean URL via Nginx (Recommended)

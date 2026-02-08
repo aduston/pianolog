@@ -2,13 +2,19 @@
 MIDI monitoring with automatic reconnection support.
 """
 import mido
-import pyudev
 import subprocess
 import time
 import logging
+import platform
+import shutil
 from typing import Optional, Callable
 
 logger = logging.getLogger(__name__)
+
+try:
+    import pyudev  # type: ignore[import-not-found]
+except ImportError:
+    pyudev = None  # type: ignore[assignment]
 
 
 class MidiMonitor:
@@ -40,10 +46,28 @@ class MidiMonitor:
         self.usb_reset_performed = False  # Track if we've already done a USB reset
         self.last_usb_reset_time = 0  # Track when last USB reset was done
 
-        # USB device monitoring for instant reconnection
-        self.context = pyudev.Context()
-        self.monitor = pyudev.Monitor.from_netlink(self.context)
-        self.monitor.filter_by(subsystem='usb')
+        # USB device monitoring for instant reconnection (Linux + pyudev only)
+        self.context = None
+        self.monitor = None
+        if pyudev is not None:
+            try:
+                self.context = pyudev.Context()
+                self.monitor = pyudev.Monitor.from_netlink(self.context)
+                self.monitor.filter_by(subsystem='usb')
+            except Exception as e:
+                logger.warning("USB udev monitoring unavailable: %s", e)
+                self.context = None
+                self.monitor = None
+        else:
+            logger.info("pyudev not installed; USB hotplug monitoring disabled")
+
+        if self.enable_usb_reset:
+            if platform.system() != "Linux":
+                self.enable_usb_reset = False
+                logger.info("USB power cycling disabled on non-Linux platform")
+            elif shutil.which("uhubctl") is None:
+                self.enable_usb_reset = False
+                logger.info("USB power cycling disabled (uhubctl not installed)")
 
         # Callbacks
         self.on_note_on: Optional[Callable[[int, int, int], None]] = None
@@ -254,6 +278,9 @@ class MidiMonitor:
         Check for USB device add/remove events (non-blocking).
         This provides instant reconnection when the piano is power-cycled.
         """
+        if self.monitor is None:
+            return
+
         device = self.monitor.poll(timeout=0)
         if device and device.action in ['add', 'remove']:
             logger.info(f"USB device {device.action} event detected")

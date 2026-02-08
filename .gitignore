@@ -15,6 +15,7 @@ build/
 .vscode/
 .idea/
 .claude/
+node_modules/
 
 # OS
 .DS_Store
@@ -23,3 +24,6 @@ Thumbs.db
 # Database and logs
 *.db
 *.log
+
+# React build output
+static/react/

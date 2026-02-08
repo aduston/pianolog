@@ -45,6 +45,34 @@ Web UI:
 - Local: `http://localhost:5000`
 - If nginx reverse-proxy is configured: `http://raspberrypi.local/pianolog`
 
+## React Pilot UI (Incremental Migration)
+
+The legacy UI is still the default at `/`. A React pilot app now lives in `frontend/` and is served at `/react` after you build it.
+
+Install frontend deps:
+
+```bash
+cd frontend
+npm install
+```
+
+Run React in development mode (with API and Socket.IO proxy to Flask on `:5000`):
+
+```bash
+npm run dev
+```
+
+Build React assets for Flask to serve:
+
+```bash
+npm run build
+```
+
+Then open:
+
+- Legacy UI: `http://localhost:5000/`
+- React pilot UI: `http://localhost:5000/react`
+
 ## Configure
 
 Edit `pianolog/config.py`:
