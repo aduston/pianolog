@@ -9,6 +9,7 @@ import subprocess
 import time
 import logging
 import sys
+from pathlib import Path
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,11 +45,12 @@ class USBWatchdog:
     def is_device_working(self):
         """Check if device is actually working (appears in MIDI devices)."""
         try:
+            repo_root = Path(__file__).resolve().parent.parent
             result = subprocess.run(
                 ['python3', '-c', 'import mido; print(mido.get_input_names())'],
                 capture_output=True,
                 text=True,
-                cwd='/home/aduston/practicetracker',
+                cwd=str(repo_root),
                 timeout=5
             )
             return 'USB func for MIDI' in result.stdout

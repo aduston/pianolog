@@ -11,6 +11,8 @@ pkill -f "chromium.*kiosk"
 sleep 2
 
 # Restart the kiosk
-DISPLAY=:0 /home/aduston/pianolog/start_kiosk.sh &
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+DISPLAY=:0 "$ROOT_DIR/scripts/start_kiosk.sh" &
 
 echo "Kiosk browser restarting (will be ready in ~12 seconds)..."

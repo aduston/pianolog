@@ -1,7 +1,9 @@
 #!/bin/bash
 # Start pianolog with web interface
 
-cd /home/aduston/pianolog
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$ROOT_DIR"
 
 echo "Starting Piano Practice Tracker with Web Interface..."
 echo ""

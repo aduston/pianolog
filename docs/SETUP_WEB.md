@@ -14,7 +14,7 @@ venv/bin/pip install -r requirements.txt
 ### 2. Start Pianolog with Web Server
 
 ```bash
-./start_with_web.sh
+./scripts/start_with_web.sh
 ```
 
 Or manually:
@@ -37,7 +37,7 @@ If you want to access the interface at the cleaner URL `http://raspberrypi.local
 ### 1. Install and Configure Nginx
 
 ```bash
-./setup_nginx.sh
+./scripts/setup_nginx.sh
 ```
 
 This script will:
@@ -67,10 +67,7 @@ The systemd service has been updated to work with the web interface.
 ### Install/Update the Service
 
 ```bash
-sudo cp piano-practice-tracker.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable piano-practice-tracker
-sudo systemctl restart piano-practice-tracker
+./scripts/install_service.sh
 ```
 
 ### Check Service Status
@@ -155,7 +152,7 @@ Open the web interface in two different browser windows or tabs:
 sudo netstat -tlnp | grep 5000
 ```
 
-Kill the process or change the port in main.py.
+Kill the process or change the port in `pianolog/config.py`.
 
 ---
 
@@ -211,7 +208,7 @@ sudo tail -f /var/log/nginx/error.log
 
 Start pianolog:
 ```bash
-./start_with_web.sh
+./scripts/start_with_web.sh
 ```
 
 ### WebSocket Not Connecting
@@ -258,10 +255,10 @@ Start pianolog:
 
 ### Change Web Server Port
 
-Edit [main.py](main.py:65) to change the default port:
+Edit `pianolog/config.py` to change the default port:
 
 ```python
-self.web_server = PianologWebServer(self, port=8080)
+WEB_PORT = 8080
 ```
 
 Or pass it as a parameter when creating PracticeTracker.
@@ -274,19 +271,17 @@ To run without the web interface:
 tracker = PracticeTracker(enable_web_server=False)
 ```
 
-Or modify [main.py](main.py:34) to set the default to False.
+Or instantiate `PracticeTracker(enable_web_server=False)`.
 
 ### Change Session Detection Thresholds
 
-Edit the detector settings in [main.py](main.py:43-47):
+Edit the detector settings in `pianolog/config.py`:
 
 ```python
-self.detector = PracticeDetector(
-    activity_threshold=3,        # Notes needed to start session
-    activity_window=10.0,         # Time window in seconds
-    min_practice_duration=30.0,   # Minimum session length
-    session_timeout=15.0          # Inactivity timeout
-)
+ACTIVITY_THRESHOLD = 3
+ACTIVITY_WINDOW = 10.0
+MIN_PRACTICE_DURATION = 30.0
+SESSION_TIMEOUT = 30.0
 ```
 
 ## Performance Notes

@@ -12,7 +12,7 @@ venv/bin/pip install -r requirements.txt
 ## Step 2: Start the Server
 
 ```bash
-./start_with_web.sh
+./scripts/start_with_web.sh
 ```
 
 ## Step 3: Open in Browser
@@ -25,7 +25,7 @@ Or from another device on your network: **http://raspberrypi.local:5000**
 ### Option B: Clean URL via Nginx (Recommended)
 Run the setup script:
 ```bash
-./setup_nginx.sh
+./scripts/setup_nginx.sh
 ```
 
 Then open: **http://raspberrypi.local/pianolog**
@@ -43,7 +43,7 @@ Then open: **http://raspberrypi.local/pianolog**
 1. **No session active:** Page shows "No active session"
 2. **Play piano:** After 3+ notes, session automatically starts
 3. **Watch updates:** Duration and note count update in real-time
-4. **Stop playing:** After 15 seconds of silence, session ends
+4. **Stop playing:** After ~30 seconds of silence, session ends
 5. **Switch users:** Click "Parent" or "Daughter" button anytime
 
 ## Testing Without Piano
@@ -58,10 +58,7 @@ You can open the web interface even without a piano connected. It will show "No 
 To have pianolog start automatically on boot:
 
 ```bash
-sudo cp piano-practice-tracker.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable piano-practice-tracker
-sudo systemctl start piano-practice-tracker
+./scripts/install_service.sh
 ```
 
 Check status:
@@ -83,7 +80,7 @@ sudo systemctl status piano-practice-tracker
 
 ### Using nginx but getting 502 error?
 - Nginx is running but pianolog isn't
-- Start pianolog: `./start_with_web.sh`
+- Start pianolog: `./scripts/start_with_web.sh`
 
 ## Next Steps
 

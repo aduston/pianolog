@@ -5,9 +5,11 @@ set -e
 
 echo "Installing Piano Practice Tracker as a system service..."
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Copy service file to systemd directory
 echo "Copying service file..."
-sudo cp piano-practice-tracker.service /etc/systemd/system/
+sudo cp "$SCRIPT_DIR/piano-practice-tracker.service" /etc/systemd/system/
 
 # Reload systemd to recognize new service
 echo "Reloading systemd..."

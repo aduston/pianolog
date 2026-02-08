@@ -3,7 +3,7 @@
 Simple test script for the web server without requiring MIDI device.
 """
 import time
-from main import PracticeTracker
+from pianolog.tracker import PracticeTracker
 
 if __name__ == "__main__":
     print("Starting pianolog with web server (test mode)...")

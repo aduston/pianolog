@@ -13,13 +13,13 @@ The Piano Practice Tracker is now installed and running as a service! It will au
    - Press **D** for Alex
 4. **Hear confirmation** - The piano plays a chord to confirm
 5. **Practice!** - Your session is now being tracked
-6. **When done** - Stop playing for 15 seconds and the session auto-saves
+6. **When done** - Stop playing for ~30 seconds and the session auto-saves
 
 ## Viewing Your Practice Data
 
 ```bash
 # Activate the virtual environment
-cd /home/aduston/practicetracker
+cd /home/aduston/pianolog
 source venv/bin/activate
 
 # Show recent practice sessions
@@ -95,16 +95,14 @@ sudo systemctl start piano-practice-tracker
 ## Configuration
 
 ### Session Detection Settings
-Located in `main.py`, line 39-43:
-- **activity_threshold**: 3 (notes needed to start session)
-- **activity_window**: 10.0 (seconds to detect activity)
-- **min_practice_duration**: 30.0 (minimum seconds to save)
-- **session_timeout**: 15.0 (seconds of silence to end session)
+Located in `pianolog/config.py`:
+- **ACTIVITY_THRESHOLD**: notes needed to start session
+- **ACTIVITY_WINDOW**: seconds to detect activity
+- **MIN_PRACTICE_DURATION**: minimum seconds to save
+- **SESSION_TIMEOUT**: seconds of silence to end session
 
 ### User Mapping
-Located in `main.py`, line 53-56:
-- C (MIDI note 60) = parent
-- D (MIDI note 62) = daughter
+Located in `pianolog/config.py` (`USERS` mapping).
 
 To add more users, edit these lines and restart the service.
 
@@ -124,9 +122,9 @@ sudo systemctl enable piano-practice-tracker
 
 ## Database Location
 
-All practice data is stored in: `/home/aduston/practicetracker/practice_sessions.db`
+All practice data is stored in: `/home/aduston/pianolog/practice_sessions.db`
 
 ## Logs
 
-Application logs: `/home/aduston/practicetracker/practice_tracker.log`
+Application logs: `/home/aduston/pianolog/practice_tracker.log`
 System logs: `sudo journalctl -u piano-practice-tracker`

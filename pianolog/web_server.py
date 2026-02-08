@@ -4,11 +4,11 @@ Web server for pianolog - provides a web interface for viewing and managing prac
 import logging
 import threading
 import json
+from pathlib import Path
 from flask import Flask, render_template, jsonify, request, make_response
 from flask_socketio import SocketIO, emit
-from database import PracticeDatabase
 import time
-import config
+import pianolog.config as config
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,13 @@ class PianologWebServer:
         self.port = port
 
         # Create Flask app
-        self.app = Flask(__name__)
+        repo_root = Path(__file__).resolve().parent.parent
+        self.app = Flask(
+            __name__,
+            template_folder=str(repo_root / "templates"),
+            static_folder=str(repo_root / "static"),
+            static_url_path="/static",
+        )
         self.app.config['SECRET_KEY'] = 'pianolog-secret-key-change-in-production'
         self.app.config['JSON_SORT_KEYS'] = False
         self.app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable caching for development

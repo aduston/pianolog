@@ -35,7 +35,7 @@ The web interface will be available at: **http://localhost:5000**
 To access the web interface at `http://raspberrypi.local/pianolog`:
 
 ```bash
-./setup_nginx.sh
+./scripts/setup_nginx.sh
 ```
 
 This will:
