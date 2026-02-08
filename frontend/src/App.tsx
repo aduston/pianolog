@@ -1,13 +1,17 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { endSession, getMidiStatus, getStatus, getWeeklyStats, reconnectMidi } from './lib/api';
+import { endSession, getMidiStatus, getStatus, getUsers, getWeeklyStats, reconnectMidi } from './lib/api';
 import { PracticeScreen } from './components/PracticeScreen';
 import { StatsScreen } from './components/StatsScreen';
+import { UserManagementScreen } from './components/UserManagementScreen';
+import { useKioskBoard } from './hooks/useKioskBoard';
 import { usePianologSocket } from './hooks/usePianologSocket';
 
 export function App() {
   const queryClient = useQueryClient();
   const [wsConnected, setWsConnected] = useState(false);
+  const [screen, setScreen] = useState<'stats' | 'user-mgmt'>('stats');
+  useKioskBoard(screen);
 
   const statusQuery = useQuery({
     queryKey: ['status'],
@@ -25,6 +29,11 @@ export function App() {
     queryKey: ['midi-status'],
     queryFn: getMidiStatus,
     refetchInterval: 10_000
+  });
+
+  const usersQuery = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers
   });
 
   usePianologSocket(
@@ -114,10 +123,20 @@ export function App() {
           onEndSession={() => endSessionMutation.mutate()}
           ending={endSessionMutation.isPending}
         />
+      ) : screen === 'user-mgmt' ? (
+        <UserManagementScreen
+          users={usersQuery.data ?? []}
+          loading={usersQuery.isLoading}
+          onBack={() => {
+            setScreen('stats');
+            queryClient.invalidateQueries({ queryKey: ['weekly-stats'] });
+          }}
+        />
       ) : (
         <StatsScreen
           weeklyStats={weeklyStatsQuery.data ?? {}}
           loading={weeklyStatsQuery.isLoading}
+          onManageUsers={() => setScreen('user-mgmt')}
         />
       )}
     </main>

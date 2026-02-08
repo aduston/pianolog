@@ -87,6 +87,10 @@ body {
   margin-top: 0.7rem;
 }
 
+.screen-actions {
+  margin-bottom: 0.8rem;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -162,4 +166,58 @@ button {
 button:disabled {
   opacity: 0.65;
   cursor: wait;
+}
+
+.user-mgmt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.user-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  background: rgba(82, 98, 125, 0.25);
+  border: 1px solid rgba(182, 203, 231, 0.2);
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem;
+}
+
+.user-name {
+  font-weight: 700;
+}
+
+.user-note {
+  font-size: 0.9rem;
+  color: #d7e1f0;
+}
+
+.add-user-form {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.add-user-form label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.95rem;
+}
+
+.add-user-form input {
+  border: 1px solid rgba(182, 203, 231, 0.35);
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  background: rgba(3, 15, 28, 0.75);
+  color: #eff6ff;
 }

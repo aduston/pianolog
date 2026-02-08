@@ -4,9 +4,10 @@ import type { WeeklyStats } from '../lib/types';
 type StatsScreenProps = {
   weeklyStats: WeeklyStats;
   loading: boolean;
+  onManageUsers: () => void;
 };
 
-export function StatsScreen({ weeklyStats, loading }: StatsScreenProps) {
+export function StatsScreen({ weeklyStats, loading, onManageUsers }: StatsScreenProps) {
   const [page, setPage] = useState(0);
   const [isLandscapeWide, setIsLandscapeWide] = useState(
     window.matchMedia('(min-width: 768px) and (orientation: landscape)').matches
@@ -67,7 +68,14 @@ export function StatsScreen({ weeklyStats, loading }: StatsScreenProps) {
   };
 
   if (!isLandscapeWide || entries.length <= 2) {
-    return <section className="stats-grid">{entries.map(([userName, days]) => renderUserCard(userName, days))}</section>;
+    return (
+      <section>
+        <div className="screen-actions">
+          <button onClick={onManageUsers}>Manage Users</button>
+        </div>
+        <div className="stats-grid">{entries.map(([userName, days]) => renderUserCard(userName, days))}</div>
+      </section>
+    );
   }
 
   const pages = Math.ceil(entries.length / 2);
@@ -76,6 +84,9 @@ export function StatsScreen({ weeklyStats, loading }: StatsScreenProps) {
 
   return (
     <section>
+      <div className="screen-actions">
+        <button onClick={onManageUsers}>Manage Users</button>
+      </div>
       <div className="stats-grid">{pageEntries.map(([userName, days]) => renderUserCard(userName, days))}</div>
       <div className="carousel-nav">
         <button disabled={currentPage === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>

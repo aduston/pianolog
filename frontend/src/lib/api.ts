@@ -1,5 +1,5 @@
 import { apiUrl } from './basePath';
-import type { MidiStatus, SessionStatus, WeeklyStats } from './types';
+import type { MidiStatus, SessionStatus, User, WeeklyStats } from './types';
 
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(apiUrl(path), init);
@@ -27,4 +27,22 @@ export function endSession(): Promise<{ success: boolean; message: string }> {
 
 export function reconnectMidi(): Promise<{ success: boolean; connected: boolean; device: string | null }> {
   return fetchJson('/api/midi/reconnect', { method: 'POST' });
+}
+
+export function getUsers(): Promise<User[]> {
+  return fetchJson('/api/users');
+}
+
+export function addUser(payload: { name: string; trigger_note: number }): Promise<{ success: boolean }> {
+  return fetchJson('/api/users/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+}
+
+export function deleteUser(userId: number): Promise<{ success: boolean }> {
+  return fetchJson(`/api/users/${userId}`, { method: 'DELETE' });
 }

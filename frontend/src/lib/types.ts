@@ -22,3 +22,9 @@ export type MidiStatus = {
   device: string | null;
   searching_for: string;
 };
+
+export type User = {
+  id: number;
+  note: number;
+  name: string;
+};
